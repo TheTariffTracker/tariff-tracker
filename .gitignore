@@ -1,0 +1,30 @@
+# Python virtual environment
+venv/
+
+# Secrets — NEVER commit
+.env
+.env.local
+.env.*.local
+
+# Python compiled cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Editor settings
+.vscode/
+.idea/
+*.swp
+
+# OS clutter
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Distribution / build artifacts
+dist/
+build/
+*.egg-info/

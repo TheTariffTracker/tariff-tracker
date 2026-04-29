@@ -1,0 +1,26 @@
+name: DTS weekday sync
+
+# Daily Treasury Statement: published every business day around 4 PM ET.
+# We run at 5 PM ET to grab the day's data after publication.
+
+on:
+  schedule:
+    # 22:00 UTC, Monday-Friday ≈ 5:00 PM ET DST / 4:00 PM ET standard time.
+    # Treasury sometimes publishes a bit late — workflow may then return
+    # 0 records and exit cleanly; next run picks up the missed day.
+    - cron: '0 22 * * 1-5'
+  workflow_dispatch: {}
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - run: pip install -r requirements.txt
+      - run: python -m scripts.fetch_dts
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}

@@ -1,0 +1,24 @@
+name: Federal Register weekday sync
+
+# Federal Register: publishes every business day. We run weekday mornings
+# to catch new tariff-related documents.
+
+on:
+  schedule:
+    # 12:00 UTC, Monday-Friday ≈ 7-8 AM ET.
+    - cron: '0 12 * * 1-5'
+  workflow_dispatch: {}
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - run: pip install -r requirements.txt
+      - run: python -m scripts.fetch_federal_register
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}

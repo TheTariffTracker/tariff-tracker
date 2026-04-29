@@ -1,0 +1,25 @@
+name: MTS twice-monthly sync
+
+# Monthly Treasury Statement: published once a month, ~3-4 weeks after
+# month end. Running on the 1st and 15th catches both the typical
+# publication window and any retroactive revisions.
+
+on:
+  schedule:
+    # 13:00 UTC on the 1st and 15th of each month ≈ 8-9 AM ET.
+    - cron: '0 13 1,15 * *'
+  workflow_dispatch: {}
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - run: pip install -r requirements.txt
+      - run: python -m scripts.fetch_mts
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}

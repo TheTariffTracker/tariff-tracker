@@ -1,0 +1,26 @@
+name: HTS daily sync
+
+# Runs fetch_hts.py once a day. The script does its own change-detection
+# (SHA-256 hash compared to system_state) so most days it exits early without
+# writing anything.
+
+on:
+  schedule:
+    # 10:00 UTC daily ≈ 6:00 AM ET (during DST; 5 AM ET during standard time).
+    # GitHub Actions cron runs in UTC. ET drift across DST is acceptable.
+    - cron: '0 10 * * *'
+  workflow_dispatch: {}  # allow manual runs from the Actions tab
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - run: pip install -r requirements.txt
+      - run: python -m scripts.fetch_hts
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}

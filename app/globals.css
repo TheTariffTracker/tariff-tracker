@@ -1,0 +1,71 @@
+@import "tailwindcss";
+
+/* Tailwind 4 custom variant: enables `dark:` utilities to fire based on the
+   `data-theme="dark"` attribute on <html> (set by the theme toggle), instead of
+   the default `prefers-color-scheme: dark` media query. */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+@theme {
+  /* ==========================================================================
+     Fonts — wired to next/font/google CSS variables defined in app/layout.tsx
+     ========================================================================== */
+  --font-display: var(--font-dm-serif);   /* DM Serif Display — hero only */
+  --font-serif:   var(--font-ibm-plex-serif); /* IBM Plex Serif — section titles */
+  --font-sans:    var(--font-inter);      /* Inter — body, UI, tables */
+
+  /* ==========================================================================
+     Brand accents (theme-responsive — light-mode defaults defined here,
+     dark-mode overrides live under [data-theme="dark"] below)
+     ========================================================================== */
+  --color-orange:        #C2410C;
+  --color-orange-bright: #F97316;
+  --color-blue:          #1D4ED8;
+  --color-green:         #15803D;
+  --color-red:           #B91C1C;
+
+  /* ==========================================================================
+     Dollar-bill palette (FIXED — these never flip with theme.
+     Used in masthead and counter strip; constant visual anchor.)
+     ========================================================================== */
+  --color-bill-cream:       #EFE7D5;
+  --color-bill-green-deep:  #2F5A45;
+  --color-bill-green-mid:   #3F6D55;
+  --color-bill-brown:       #5D4D3A;
+  --color-bill-text-muted:  #7A6952;
+
+  /* ==========================================================================
+     Body surfaces (theme-responsive)
+     ========================================================================== */
+  --color-bg:            #FFFFFF;
+  --color-bg-alt:        #FAFAFA;
+  --color-bg-strip:      #F5F5F4;
+  --color-bg-warm:       #FAF7F2;
+  --color-fg:            #171717;
+  --color-fg-muted:      #52525B;
+  --color-border:        #E4E4E7;
+  --color-border-strong: #D4D4D8;
+}
+
+/* Dark mode overrides — only the theme-responsive tokens flip.
+   Dollar-bill palette intentionally NOT overridden. */
+[data-theme="dark"] {
+  --color-orange:        #FB923C;
+  --color-blue:          #60A5FA;
+  --color-green:         #4ADE80;
+  --color-red:           #F87171;
+
+  --color-bg:            #0A0A0A;
+  --color-bg-alt:        #18181B;
+  --color-bg-strip:      #18181B;
+  --color-bg-warm:       #141312;
+  --color-fg:            #FAFAFA;
+  --color-fg-muted:      #A1A1AA;
+  --color-border:        #27272A;
+  --color-border-strong: #3F3F46;
+}
+
+body {
+  background: var(--color-bg);
+  color: var(--color-fg);
+  font-family: var(--font-sans), system-ui, sans-serif;
+}

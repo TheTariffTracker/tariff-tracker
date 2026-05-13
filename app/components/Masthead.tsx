@@ -7,16 +7,35 @@
 // app/globals.css under the .masthead / .masthead-logo / .masthead-tagline /
 // .masthead-text class names referenced below.
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+
+const STORAGE_KEY = "theme";
 
 export default function Masthead() {
-  // Local-only theme state for now. No persistence — refresh resets to light.
-  // We'll add localStorage (or a cookie) once the rest of the layout is in.
+  // SSR-safe initial state: server always renders "light". The inline script
+  // in layout.tsx may have set <html data-theme="dark"> before hydration; the
+  // mount effect below reads it and syncs state. `mounted` lets us render a
+  // static button label during SSR + first client render (avoiding hydration
+  // mismatch) and switch to the real label after mount.
   const [theme, setTheme] = useState<"light" | "dark">("light");
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    const current = document.documentElement.getAttribute("data-theme");
+    if (current === "dark" || current === "light") {
+      setTheme(current);
+    }
+    setMounted(true);
+  }, []);
 
   const toggleTheme = () => {
     const next = theme === "dark" ? "light" : "dark";
     document.documentElement.setAttribute("data-theme", next);
+    try {
+      localStorage.setItem(STORAGE_KEY, next);
+    } catch {
+      // Private-mode browsers may throw; the in-memory toggle still works.
+    }
     setTheme(next);
   };
 
@@ -66,7 +85,7 @@ export default function Masthead() {
           onClick={toggleTheme}
           className="bg-[rgba(255,252,245,0.4)] border border-bill-green-mid text-bill-green-deep px-3 py-1.5 text-xs font-medium rounded cursor-pointer transition-colors hover:border-orange hover:text-orange"
         >
-          {theme === "light" ? "☀ Light" : "🌙 Dark"}
+          {mounted ? (theme === "light" ? "☀ Light" : "🌙 Dark") : "☀ Light"}
         </button>
       </div>
     </header>

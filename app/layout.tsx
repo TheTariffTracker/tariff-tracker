@@ -43,6 +43,22 @@ export default function RootLayout({
       className={`${dmSerifDisplay.variable} ${ibmPlexSerif.variable} ${inter.variable} h-full antialiased`}
       suppressHydrationWarning
     >
+      <head>
+        {/* Theme init: runs synchronously before paint so reloading into dark
+            mode doesn't flash light first. Reads `theme` from localStorage and
+            sets data-theme on <html>. Default (no stored value) = light.
+
+            suppressHydrationWarning on the <script> itself silences the
+            mismatch warning that fires when a browser extension (location
+            spoofers, Grammarly, etc.) rewrites this tag's attributes between
+            SSR and hydration. The script still runs correctly. */}
+        <script
+          suppressHydrationWarning
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var t=localStorage.getItem('theme');if(t==='dark'||t==='light')document.documentElement.setAttribute('data-theme',t);}catch(e){}})();`,
+          }}
+        />
+      </head>
       <body className="min-h-full flex flex-col" suppressHydrationWarning>{children}</body>
     </html>
   );

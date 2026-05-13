@@ -219,3 +219,155 @@ body {
 @media (max-width: 480px) {
   .counter-big { font-size: 22px; letter-spacing: -0.02em; }
 }
+
+/* ==========================================================================
+   Generic info icon — 14px circle wrapping an italic Georgia "i". Used in
+   any theme-responsive context (e.g. stat strip, table headers, card titles).
+   Counter strip has its own dollar-bill-colored variant (.counter-info).
+   Same box-shadow trick: border doesn't survive Tailwind 4's preflight reset,
+   so we draw the ring with an inset box-shadow instead.
+   ========================================================================== */
+.info-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  box-shadow: inset 0 0 0 1px currentColor;
+  border-radius: 50%;
+  font-size: 9px;
+  font-style: italic;
+  font-family: Georgia, "Times New Roman", serif;
+  font-weight: 400;
+  line-height: 1;
+  color: var(--color-fg-muted);
+  cursor: help;
+  user-select: none;
+  transition: color 120ms ease;
+  flex-shrink: 0;
+  /* Reset inherited text-transform/letter-spacing from uppercase label parents. */
+  text-transform: none;
+  letter-spacing: 0;
+}
+.info-icon:hover,
+.info-icon:focus {
+  color: var(--color-orange-bright);
+}
+
+/* ==========================================================================
+   Stat strip — horizontally-scrollable stat bar below the counter strip.
+   Theme-responsive gray background. Manual scroll via ‹ › arrow buttons at
+   each end (handled by StatStripScroller client component). Each card has a
+   small uppercase label, a large value, and a sub-info line (delta or note).
+   ========================================================================== */
+.stat-strip-wrap {
+  background: var(--color-bg-strip);
+  border-bottom: 1px solid var(--color-border);
+  display: flex;
+  align-items: stretch;
+}
+
+.stat-strip-arrow {
+  background: var(--color-bg-strip);
+  border: none;
+  color: var(--color-fg-muted);
+  font-size: 18px;
+  cursor: pointer;
+  padding: 0 10px;
+  flex-shrink: 0;
+  font-family: inherit;
+  transition: color 0.15s;
+}
+.stat-strip-arrow:hover {
+  color: var(--color-orange);
+}
+.stat-strip-arrow:first-child {
+  border-right: 1px solid var(--color-border);
+}
+.stat-strip-arrow:last-child {
+  border-left: 1px solid var(--color-border);
+}
+
+/* CRITICAL: `overflow-y: hidden` MUST be set explicitly. When only `overflow-x:
+   auto` is set, the browser defaults `overflow-y` to `auto` too, creating a
+   phantom vertical scrollbar with empty space below the cards. */
+.stat-strip {
+  display: flex;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-behavior: smooth;
+  flex: 1;
+}
+.stat-strip::-webkit-scrollbar {
+  height: 0;
+}
+
+.stat-item {
+  padding: 10px 18px;
+  border-right: 1px solid var(--color-border);
+  min-width: 200px;
+  flex-shrink: 0;
+  transition: background 0.15s;
+}
+.stat-item:hover {
+  background: var(--color-bg-alt);
+}
+.stat-item-wide {
+  min-width: 340px;
+}
+.stat-item-medium {
+  min-width: 240px;
+}
+
+.stat-label {
+  font-size: 10px;
+  color: var(--color-fg-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.stat-value {
+  font-size: 17px;
+  font-weight: 700;
+  margin-top: 3px;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-fg);
+  letter-spacing: -0.01em;
+}
+
+.stat-delta {
+  font-size: 11px;
+  margin-top: 2px;
+  font-variant-numeric: tabular-nums;
+}
+.stat-delta-up {
+  color: var(--color-green);
+}
+.stat-delta-down {
+  color: var(--color-red);
+}
+.stat-delta-neutral {
+  color: var(--color-fg-muted);
+}
+
+/* FR alert title — clickable link, blue, truncates with ellipsis at 280px. */
+.stat-fr-title {
+  display: block;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-blue);
+  margin-top: 3px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 280px;
+  text-decoration: none;
+}
+a.stat-fr-title:hover,
+a.stat-fr-title:focus {
+  text-decoration: underline;
+}

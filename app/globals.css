@@ -108,3 +108,18 @@ body {
     text-align: center;
   }
 }
+
+/* ==========================================================================
+   Nav strip — secondary navigation below the masthead. Hides its own
+   horizontal scrollbar (we still scroll, just without a visible bar) and
+   collapses the right-pinned search at narrow widths.
+   ========================================================================== */
+.nav-items::-webkit-scrollbar {
+  height: 0;
+}
+
+@media (max-width: 950px) {
+  .nav-search {
+    display: none;
+  }
+}

@@ -43,7 +43,7 @@ export default function RootLayout({
       className={`${dmSerifDisplay.variable} ${ibmPlexSerif.variable} ${inter.variable} h-full antialiased`}
       suppressHydrationWarning
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col" suppressHydrationWarning>{children}</body>
     </html>
   );
 }

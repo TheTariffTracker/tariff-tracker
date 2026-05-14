@@ -5,10 +5,17 @@ name: DTS weekday sync
 
 on:
   schedule:
-    # 22:00 UTC, Monday-Friday ≈ 5:00 PM ET DST / 4:00 PM ET standard time.
+    # 22:47 UTC, Monday-Friday ≈ 5:47 PM ET DST / 4:47 PM ET standard time.
     # Treasury sometimes publishes a bit late — workflow may then return
     # 0 records and exit cleanly; next run picks up the missed day.
-    - cron: '0 22 * * 1-5'
+    #
+    # Why minute 47 (not 0): GitHub Actions delays scheduled workflows by
+    # hours during peak-load times, and top-of-hour (minute 0) is the worst
+    # offender. Empirically, `0 22` was delaying ~10 hours (firing at ~3 AM
+    # CDT the next morning instead of 5 PM CDT same day). Off-hour minutes
+    # land much closer to schedule. See GitHub docs: "To decrease the chance
+    # of delay, schedule your workflow to run at a different time of the hour."
+    - cron: '47 22 * * 1-5'
   workflow_dispatch: {}
 
 jobs:

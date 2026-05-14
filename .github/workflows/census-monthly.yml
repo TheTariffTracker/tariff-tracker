@@ -7,8 +7,11 @@ name: Census trade monthly sync
 
 on:
   schedule:
-    # 13:00 UTC on the 15th of each month ≈ 8-9 AM ET.
-    - cron: '0 13 15 * *'
+    # 13:47 UTC on the 15th of each month ≈ 8:45-ish AM ET. Off-hour minute
+    # (not 0) avoids the GitHub Actions top-of-hour scheduling delay — see
+    # dts-weekday.yml. Spaced 6 minutes after MTS (which fires the 1st and
+    # 15th) so the two don't compete for runners on the 15th.
+    - cron: '47 13 15 * *'
   workflow_dispatch: {}
 
 jobs:

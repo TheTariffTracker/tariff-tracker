@@ -6,9 +6,11 @@ name: HTS daily sync
 
 on:
   schedule:
-    # 10:00 UTC daily ≈ 6:00 AM ET (during DST; 5 AM ET during standard time).
-    # GitHub Actions cron runs in UTC. ET drift across DST is acceptable.
-    - cron: '0 10 * * *'
+    # 10:37 UTC daily ≈ 6:30-ish AM ET (during DST; 5:30-ish AM ET during
+    # standard time). GitHub Actions cron runs in UTC. ET drift across DST is
+    # acceptable. Off-hour minute (not 0) avoids the GitHub Actions
+    # top-of-hour scheduling delay — see dts-weekday.yml.
+    - cron: '37 10 * * *'
   workflow_dispatch: {}  # allow manual runs from the Actions tab
 
 jobs:

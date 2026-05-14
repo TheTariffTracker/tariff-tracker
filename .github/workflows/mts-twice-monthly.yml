@@ -6,8 +6,10 @@ name: MTS twice-monthly sync
 
 on:
   schedule:
-    # 13:00 UTC on the 1st and 15th of each month ≈ 8-9 AM ET.
-    - cron: '0 13 1,15 * *'
+    # 13:41 UTC on the 1st and 15th of each month ≈ 8:40-ish AM ET. Off-hour
+    # minute (not 0) avoids the GitHub Actions top-of-hour scheduling delay —
+    # see dts-weekday.yml.
+    - cron: '41 13 1,15 * *'
   workflow_dispatch: {}
 
 jobs:

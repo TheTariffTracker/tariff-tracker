@@ -5,8 +5,9 @@ name: Federal Register weekday sync
 
 on:
   schedule:
-    # 12:00 UTC, Monday-Friday ≈ 7-8 AM ET.
-    - cron: '0 12 * * 1-5'
+    # 12:23 UTC, Monday-Friday ≈ 7-8 AM ET. Off-hour minute (not 0) avoids
+    # the GitHub Actions top-of-hour scheduling delay — see dts-weekday.yml.
+    - cron: '23 12 * * 1-5'
   workflow_dispatch: {}
 
 jobs:

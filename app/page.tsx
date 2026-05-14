@@ -11,6 +11,14 @@ import Footer from "./components/Footer";
 // Top-level page. Layout order: masthead → nav strip → counter strip →
 // stat strip → main content (Dashboard heading + cards) → footer.
 
+// ISR: regenerate the page at most once every 5 minutes. Each regeneration
+// triggers ~6-8 Supabase queries (CounterStrip + StatStrip + ChartCard +
+// FrAlertsCard + ProductCategoriesCard). Caching for 5 min caps Supabase
+// hits at ~96/day per page regardless of traffic. Real data updates only
+// land daily (DTS, FR) or monthly (MTS, Census), so a 5-minute stale window
+// is invisible to users — they'd see the same numbers either way.
+export const revalidate = 300;
+
 export default function Home() {
   return (
     <>

@@ -1,39 +1,28 @@
-import Masthead from "./components/Masthead";
-import Nav from "./components/Nav";
-import CounterStrip from "./components/CounterStrip";
-import StatStrip from "./components/StatStrip";
 import MainContent from "./components/MainContent";
 import ChartCard from "./components/ChartCard";
 import FrAlertsCard from "./components/FrAlertsCard";
 import ProductCategoriesCard from "./components/ProductCategoriesCard";
-import Footer from "./components/Footer";
 
-// Top-level page. Layout order: masthead → nav strip → counter strip →
-// stat strip → main content (Dashboard heading + cards) → footer.
-
-// ISR: regenerate the page at most once every 5 minutes. Each regeneration
-// triggers ~6-8 Supabase queries (CounterStrip + StatStrip + ChartCard +
-// FrAlertsCard + ProductCategoriesCard). Caching for 5 min caps Supabase
-// hits at ~96/day per page regardless of traffic. Real data updates only
-// land daily (DTS, FR) or monthly (MTS, Census), so a 5-minute stale window
-// is invisible to users — they'd see the same numbers either way.
-export const revalidate = 300;
+// Dashboard page (route: "/"). Shared chrome (Masthead, Nav, CounterStrip,
+// StatStrip, Footer) lives in app/layout.tsx so it renders on every nav
+// page. This file just contributes the Dashboard's own content: section
+// title + 90-day chart + two-column row (FR alerts + product categories).
+//
+// The 5-minute ISR is set on the layout, so this page inherits it. If we
+// ever need a shorter or longer cache window for the Dashboard
+// specifically, we can override `export const revalidate = N` here.
 
 export default function Home() {
   return (
-    <>
-      <Masthead />
-      <Nav />
-      <CounterStrip />
-      <StatStrip />
-      <MainContent>
-        <ChartCard />
-        <div className="grid grid-cols-1 min-[900px]:grid-cols-2 gap-5 mb-5">
-          <FrAlertsCard />
-          <ProductCategoriesCard />
-        </div>
-      </MainContent>
-      <Footer />
-    </>
+    <MainContent
+      title="Dashboard"
+      subtitle="Real-time customs revenue and incoming tariff actions, updated each business day."
+    >
+      <ChartCard />
+      <div className="grid grid-cols-1 min-[900px]:grid-cols-2 gap-5 mb-5">
+        <FrAlertsCard />
+        <ProductCategoriesCard />
+      </div>
+    </MainContent>
   );
 }

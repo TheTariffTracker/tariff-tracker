@@ -1,6 +1,6 @@
-// MainContent — the body region below the stat strip. Holds the "Dashboard"
-// section title + subtitle and acts as the container for every card we add
-// below (90-day chart, FR alerts table, product categories table, etc.).
+// MainContent — the body region wrapper used by every nav page (Dashboard,
+// Incoming Tariffs, etc.). Holds the page-level section title + subtitle
+// and acts as the container for the page's cards or content.
 //
 // Layout notes from the v11 mockup (.main):
 //   - padding: 24px on all sides
@@ -13,19 +13,21 @@
 import type { ReactNode } from "react";
 
 type MainContentProps = {
+  /** Page-level H1 — IBM Plex Serif 24px, bold. */
+  title: string;
+  /** Short muted-gray description below the title. */
+  subtitle: string;
+  /** Page body content (cards, tables, charts, etc.). */
   children?: ReactNode;
 };
 
-export default function MainContent({ children }: MainContentProps) {
+export default function MainContent({ title, subtitle, children }: MainContentProps) {
   return (
     <main className="bg-bg text-fg max-w-[1400px] p-6">
       <h1 className="font-serif text-2xl font-bold tracking-[-0.02em] m-0 mb-1">
-        Dashboard
+        {title}
       </h1>
-      <p className="text-[13px] text-fg-muted m-0 mb-5">
-        Real-time customs revenue and incoming tariff actions, updated each
-        business day.
-      </p>
+      <p className="text-[13px] text-fg-muted m-0 mb-5">{subtitle}</p>
 
       {children}
     </main>

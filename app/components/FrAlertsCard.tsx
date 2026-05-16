@@ -6,15 +6,17 @@
 // no client-side useEffect/loading state is needed. The Supabase env vars
 // are validated in app/lib/supabase.ts.
 //
-// Document-type mapping (raw → display + badge tone) matches the v11 mockup:
-//   "Notice"        → "Notice"      gray
-//   "Rule"          → "Final Rule"  orange
-//   "Proposed Rule" → "Proposed"    blue
+// Doc-type mapping, badge styling, date formatting, and the FR_DOC_TYPES
+// filter list all live in app/lib/fr-badges.ts so the Incoming Tariffs
+// page can reuse them.
 
 import { supabase } from "../lib/supabase";
-
-// Same filter used by StatStrip — keeps the two surfaces consistent.
-const FR_DOC_TYPES = ["Rule", "Proposed Rule", "Notice"];
+import {
+  FR_DOC_TYPES,
+  badgeClasses,
+  formatPubDate,
+  mapDocType,
+} from "../lib/fr-badges";
 
 type FrRow = {
   title: string;
@@ -23,52 +25,12 @@ type FrRow = {
   html_url: string | null;
 };
 
-type BadgeTone = "notice" | "final" | "rule";
-
-const MONTH_SHORT = [
-  "Jan",
-  "Feb",
-  "Mar",
-  "Apr",
-  "May",
-  "Jun",
-  "Jul",
-  "Aug",
-  "Sep",
-  "Oct",
-  "Nov",
-  "Dec",
-];
-
-// Parse YYYY-MM-DD manually to avoid UTC-midnight timezone shift that
-// would render "Apr 27" as "Apr 26" in Western timezones.
-function formatPubDate(iso: string): string {
-  const [yyyy, mm, dd] = iso.split("-");
-  const monthIdx = Math.max(0, Math.min(11, Number(mm) - 1));
-  return `${MONTH_SHORT[monthIdx]} ${Number(dd)}`;
-}
-
-function mapDocType(raw: string): { label: string; tone: BadgeTone } {
-  if (raw === "Notice") return { label: "Notice", tone: "notice" };
-  if (raw === "Rule") return { label: "Final Rule", tone: "final" };
-  if (raw === "Proposed Rule") return { label: "Proposed", tone: "rule" };
-  // Unknown type: fall back to a neutral badge so we never blow up.
-  return { label: raw, tone: "notice" };
-}
-
-function badgeClasses(tone: BadgeTone): string {
-  // Background uses the light-mode hex of the brand color at low alpha;
-  // text color uses the theme-responsive token so it flips in dark mode.
-  const base =
-    "inline-block px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.04em] rounded-sm whitespace-nowrap";
-  if (tone === "rule") return `${base} bg-[rgba(29,78,216,0.12)] text-blue`;
-  if (tone === "final") return `${base} bg-[rgba(194,65,12,0.12)] text-orange`;
-  return `${base} bg-[rgba(113,113,122,0.15)] text-fg-muted`;
-}
-
 async function getRecentFrAlerts(): Promise<{ rows: FrRow[]; error: boolean }> {
   const { data, error } = await supabase
-    .from("federal_register_alerts")
+    // tariff_fr_alerts is the agency-filtered view (created 2026-05-15) that
+    // strips out non-tariff noise like FDA debarment orders. See lib/fr-badges.ts
+    // for the FR_DOC_TYPES filter that further narrows by document type.
+    .from("tariff_fr_alerts")
     .select("title, publication_date, document_type, html_url")
     .in("document_type", FR_DOC_TYPES)
     .order("publication_date", { ascending: false })

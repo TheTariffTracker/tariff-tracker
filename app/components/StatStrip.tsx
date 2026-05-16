@@ -1,4 +1,5 @@
 import { supabase } from "../lib/supabase";
+import { FR_DOC_TYPES } from "../lib/fr-badges";
 import StatStripScroller from "./StatStripScroller";
 import InfoIcon from "./InfoIcon";
 
@@ -32,11 +33,8 @@ const MONTH_NAMES_SHORT = [
   "Dec",
 ];
 
-// Federal Register document types we consider tariff-relevant. Most genuine
-// tariff actions land in one of these three. Excludes Presidential Documents
-// (rarer) and routine notice categories. Accepts some noise as a v1 tradeoff;
-// the next iteration will layer is_active_tariff curation on top.
-const FR_DOC_TYPES = ["Rule", "Proposed Rule", "Notice"];
+// Same FR_DOC_TYPES list shared with FrAlertsCard and the Incoming Tariffs
+// page lives in app/lib/fr-badges.ts so all three surfaces stay consistent.
 
 // Tariffed product lines: hardcoded placeholder until Yale Budget Lab
 // effective-rate parsing is wired (Phase 3 follow-up). Numbers match
@@ -83,7 +81,8 @@ async function getStatData(): Promise<StatData> {
       .select("year, month, customs_duties")
       .eq("year", currentYear),
     supabase
-      .from("federal_register_alerts")
+      // tariff_fr_alerts is the agency-filtered view of federal_register_alerts.
+      .from("tariff_fr_alerts")
       .select("title, publication_date, document_type, html_url")
       .in("document_type", FR_DOC_TYPES)
       .order("publication_date", { ascending: false })

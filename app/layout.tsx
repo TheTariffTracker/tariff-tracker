@@ -1,6 +1,17 @@
 import type { Metadata } from "next";
 import { DM_Serif_Display, IBM_Plex_Serif, Inter } from "next/font/google";
 import "./globals.css";
+import Masthead from "./components/Masthead";
+import Nav from "./components/Nav";
+import CounterStrip from "./components/CounterStrip";
+import StatStrip from "./components/StatStrip";
+import Footer from "./components/Footer";
+
+// 5-minute ISR applied at the layout level — every page in the app
+// (Dashboard, Incoming Tariffs, future nav pages) inherits this cache
+// window. Individual pages can still opt for a shorter revalidate or go
+// fully dynamic if they need to.
+export const revalidate = 300;
 
 // DM Serif Display — used only in the masthead hero tagline. Single weight (400).
 const dmSerifDisplay = DM_Serif_Display({
@@ -59,7 +70,14 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className="min-h-full flex flex-col" suppressHydrationWarning>{children}</body>
+      <body className="min-h-full flex flex-col" suppressHydrationWarning>
+        <Masthead />
+        <Nav />
+        <CounterStrip />
+        <StatStrip />
+        {children}
+        <Footer />
+      </body>
     </html>
   );
 }

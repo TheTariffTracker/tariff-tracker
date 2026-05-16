@@ -3,42 +3,56 @@
 // 3px orange top border stays orange always). The active nav item gets a
 // 2px orange underline + foreground text color. The search bar on the
 // right is a non-functional placeholder until we wire up a search backend.
+//
+// Client component because we use usePathname() to highlight the active
+// nav item. usePathname requires React state from the App Router runtime,
+// which is only available client-side.
 
-// Hardcoded for now — Dashboard is always "active" because no other routes
-// exist yet. Once we build /tariff-browser, /revenue-tracker, etc., swap
-// this constant for `usePathname()` from `next/navigation` (which would
-// also turn this into a client component).
-const ACTIVE_LABEL = "Dashboard";
+"use client";
 
-const NAV_ITEMS = [
-  { label: "Dashboard", href: "#" },
-  { label: "Tariff Browser", href: "#" },
-  { label: "Revenue Tracker", href: "#" },
-  { label: "Itemized Duties", href: "#" },
-  { label: "Incoming Tariffs", href: "#" },
-  { label: "AD/CVD Orders", href: "#" },
-  { label: "Historical Archive", href: "#" },
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+
+// Each nav item has a label and either a real route (`href: "/..."`) or
+// `null` for routes that don't exist yet. Items with null `href` render as
+// non-functional `<a href="#">` placeholders that don't 404. As we build
+// each nav page, swap its `null` for the route path.
+type NavItem = { label: string; href: string | null };
+
+const NAV_ITEMS: NavItem[] = [
+  { label: "Dashboard", href: "/" },
+  { label: "Tariff Browser", href: null },
+  { label: "Revenue Tracker", href: null },
+  { label: "Itemized Duties", href: null },
+  { label: "Incoming Tariffs", href: "/incoming-tariffs" },
+  { label: "AD/CVD Orders", href: null },
+  { label: "Historical Archive", href: null },
 ];
 
 export default function Nav() {
+  const pathname = usePathname();
+
   return (
     <nav className="flex items-stretch justify-between bg-bg border-t-[3px] border-t-orange border-b border-b-border">
       {/* Left: scrollable list of nav items */}
       <div className="nav-items flex flex-1 overflow-x-auto pl-6">
         {NAV_ITEMS.map((item) => {
-          const isActive = item.label === ACTIVE_LABEL;
+          const isActive = item.href !== null && pathname === item.href;
+          const className = isActive
+            ? "px-4 py-[11px] text-[13px] font-medium whitespace-nowrap border-b-2 border-b-orange text-fg transition-colors"
+            : "px-4 py-[11px] text-[13px] font-medium whitespace-nowrap border-b-2 border-b-transparent text-fg-muted hover:text-fg transition-colors";
+          if (item.href === null) {
+            // Unbuilt route — non-functional placeholder so it doesn't 404.
+            return (
+              <a key={item.label} href="#" className={className}>
+                {item.label}
+              </a>
+            );
+          }
           return (
-            <a
-              key={item.label}
-              href={item.href}
-              className={
-                isActive
-                  ? "px-4 py-[11px] text-[13px] font-medium whitespace-nowrap border-b-2 border-b-orange text-fg transition-colors"
-                  : "px-4 py-[11px] text-[13px] font-medium whitespace-nowrap border-b-2 border-b-transparent text-fg-muted hover:text-fg transition-colors"
-              }
-            >
+            <Link key={item.label} href={item.href} className={className}>
               {item.label}
-            </a>
+            </Link>
           );
         })}
       </div>

@@ -1,3 +1,4 @@
+import Link from "next/link";
 import MainContent from "../components/MainContent";
 import { supabase } from "../lib/supabase";
 import {
@@ -8,14 +9,46 @@ import {
 } from "../lib/fr-badges";
 
 // Incoming Tariffs page (route: "/incoming-tariffs"). Full Federal Register
-// alerts feed — the same `federal_register_alerts` table the Dashboard's
-// FrAlertsCard pulls from, but with a larger row limit (50). Filter by
-// document type lands in sub-step D; pagination in sub-step E.
+// alerts feed via the agency-filtered `tariff_fr_alerts` Postgres view.
 //
-// Shared chrome (Masthead, Nav, CounterStrip, StatStrip, Footer) comes
-// from app/layout.tsx. ISR cache window inherited from layout.tsx (5 min).
+// URL-driven state:
+//   ?type=all|rule|proposed-rule|notice  — document-type filter
+//   ?page=N                              — 1-indexed page number
+//
+// Both pieces of state are bookmarkable, share-able, and respect browser
+// back/forward. Filter links reset page to 1 (by not including ?page),
+// since changing the filter changes the result set.
 
 const PAGE_LIMIT = 50;
+
+const FILTER_OPTIONS = [
+  { slug: "all",          label: "All",        docType: null as string | null },
+  { slug: "rule",         label: "Final Rule", docType: "Rule" },
+  { slug: "proposed-rule",label: "Proposed",   docType: "Proposed Rule" },
+  { slug: "notice",       label: "Notice",     docType: "Notice" },
+] as const;
+
+type FilterSlug = (typeof FILTER_OPTIONS)[number]["slug"];
+
+function resolveFilter(rawType: string | undefined): FilterSlug {
+  const match = FILTER_OPTIONS.find((o) => o.slug === rawType);
+  return match ? match.slug : "all";
+}
+
+function resolvePage(rawPage: string | undefined): number {
+  const n = Number(rawPage);
+  if (!Number.isFinite(n) || n < 1) return 1;
+  return Math.floor(n);
+}
+
+/** Build a /incoming-tariffs URL preserving filter + optional page param. */
+function pageHref(filterSlug: FilterSlug, page: number): string {
+  const params = new URLSearchParams();
+  if (filterSlug !== "all") params.set("type", filterSlug);
+  if (page !== 1) params.set("page", String(page));
+  const qs = params.toString();
+  return qs ? `/incoming-tariffs?${qs}` : "/incoming-tariffs";
+}
 
 type FrRow = {
   document_number: string;
@@ -25,29 +58,74 @@ type FrRow = {
   html_url: string | null;
 };
 
-async function getRows(): Promise<{ rows: FrRow[]; error: boolean }> {
-  const { data, error } = await supabase
-    // tariff_fr_alerts is the agency-filtered view of federal_register_alerts.
+type RowsResult = {
+  rows: FrRow[];
+  totalForFilter: number;
+  error: boolean;
+};
+
+async function getRows(
+  filterSlug: FilterSlug,
+  page: number,
+): Promise<RowsResult> {
+  const opt = FILTER_OPTIONS.find((o) => o.slug === filterSlug)!;
+  const docTypes = opt.docType ? [opt.docType] : [...FR_DOC_TYPES];
+  const offset = (page - 1) * PAGE_LIMIT;
+
+  // Page of rows + total count for the current filter, in parallel.
+  const baseRows = supabase
     .from("tariff_fr_alerts")
     .select("document_number, title, publication_date, document_type, html_url")
-    .in("document_type", FR_DOC_TYPES)
+    .in("document_type", docTypes)
     .order("publication_date", { ascending: false })
-    .limit(PAGE_LIMIT);
+    .range(offset, offset + PAGE_LIMIT - 1);
+  const baseCount = supabase
+    .from("tariff_fr_alerts")
+    .select("document_number", { count: "exact", head: true })
+    .in("document_type", docTypes);
 
-  if (error) {
-    console.error("IncomingTariffsPage fetch error:", {
-      message: error.message,
-      code: error.code,
-      details: error.details,
-      hint: error.hint,
+  const [rowsResp, countResp] = await Promise.all([baseRows, baseCount]);
+
+  if (rowsResp.error) {
+    console.error("IncomingTariffsPage rows fetch error:", {
+      message: rowsResp.error.message,
+      code: rowsResp.error.code,
+      details: rowsResp.error.details,
+      hint: rowsResp.error.hint,
     });
-    return { rows: [], error: true };
+    return { rows: [], totalForFilter: 0, error: true };
   }
-  return { rows: (data ?? []) as FrRow[], error: false };
+  if (countResp.error) {
+    console.error("IncomingTariffsPage count fetch error:", {
+      message: countResp.error.message,
+      code: countResp.error.code,
+      details: countResp.error.details,
+      hint: countResp.error.hint,
+    });
+  }
+
+  return {
+    rows: (rowsResp.data ?? []) as FrRow[],
+    totalForFilter: countResp.count ?? 0,
+    error: false,
+  };
 }
 
-export default async function IncomingTariffsPage() {
-  const { rows, error } = await getRows();
+export default async function IncomingTariffsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ type?: string; page?: string }>;
+}) {
+  const params = await searchParams;
+  const filter = resolveFilter(params?.type);
+  const requestedPage = resolvePage(params?.page);
+
+  const { rows, totalForFilter, error } = await getRows(filter, requestedPage);
+
+  const totalPages = totalForFilter > 0 ? Math.ceil(totalForFilter / PAGE_LIMIT) : 0;
+  // Clamp for display (Supabase returns empty rows when offset > total, so
+  // we still want the pagination bar to show the correct last page).
+  const currentPage = totalPages > 0 ? Math.min(requestedPage, totalPages) : 1;
 
   return (
     <MainContent
@@ -55,14 +133,39 @@ export default async function IncomingTariffsPage() {
       subtitle="Federal Register documents matching tariff keywords. Updated each business day."
     >
       <section className="border border-border bg-bg">
+        {/* Header: title + total count */}
         <header className="flex justify-between items-center px-4 py-3 border-b border-border gap-4 flex-wrap">
           <h2 className="text-sm font-semibold m-0">
             Federal Register Tariff Alerts
           </h2>
           <span className="text-[11px] text-fg-muted whitespace-nowrap">
-            Showing {rows.length} most recent
+            {error
+              ? ""
+              : `${totalForFilter.toLocaleString("en-US")} matching alerts`}
           </span>
         </header>
+
+        {/* Filter row */}
+        <div className="flex items-stretch px-4 border-b border-border bg-bg-alt">
+          {FILTER_OPTIONS.map((opt) => {
+            const isActive = opt.slug === filter;
+            const className = isActive
+              ? "px-3 py-2 text-[13px] font-medium text-fg border-b-2 border-b-orange transition-colors"
+              : "px-3 py-2 text-[13px] font-medium text-fg-muted border-b-2 border-b-transparent hover:text-fg transition-colors";
+            const href = pageHref(opt.slug, 1);
+            return (
+              <Link
+                key={opt.slug}
+                href={href}
+                className={className}
+                aria-current={isActive ? "page" : undefined}
+                prefetch={false}
+              >
+                {opt.label}
+              </Link>
+            );
+          })}
+        </div>
 
         {error ? (
           <div className="px-4 py-10 text-center text-[13px] text-fg-muted">
@@ -73,52 +176,91 @@ export default async function IncomingTariffsPage() {
             No alerts match the current filter.
           </div>
         ) : (
-          <table className="w-full border-collapse text-[13px]">
-            <thead>
-              <tr>
-                <th className="bg-bg-alt font-semibold text-fg-muted uppercase text-[10px] tracking-[0.06em] text-left px-4 py-1.5 border-b border-border">
-                  Date
-                </th>
-                <th className="bg-bg-alt font-semibold text-fg-muted uppercase text-[10px] tracking-[0.06em] text-left px-4 py-1.5 border-b border-border">
-                  Type
-                </th>
-                <th className="bg-bg-alt font-semibold text-fg-muted uppercase text-[10px] tracking-[0.06em] text-left px-4 py-1.5 border-b border-border">
-                  Title
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((row, i) => {
-                const badge = mapDocType(row.document_type);
-                const isLast = i === rows.length - 1;
-                const cellBase = `px-4 py-1.5 text-left ${isLast ? "" : "border-b border-border"}`;
-                return (
-                  <tr key={row.document_number} className="hover:bg-bg-alt">
-                    <td className={`${cellBase} whitespace-nowrap`}>
-                      {formatPubDate(row.publication_date)}
-                    </td>
-                    <td className={cellBase}>
-                      <span className={badgeClasses(badge.tone)}>{badge.label}</span>
-                    </td>
-                    <td className={cellBase}>
-                      {row.html_url ? (
-                        <a
-                          href={row.html_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-fg hover:text-orange transition-colors"
-                        >
-                          {row.title}
-                        </a>
-                      ) : (
-                        row.title
-                      )}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+          <>
+            <table className="w-full border-collapse text-[13px]">
+              <thead>
+                <tr>
+                  <th className="bg-bg-alt font-semibold text-fg-muted uppercase text-[10px] tracking-[0.06em] text-left px-4 py-1.5 border-b border-border">
+                    Date
+                  </th>
+                  <th className="bg-bg-alt font-semibold text-fg-muted uppercase text-[10px] tracking-[0.06em] text-left px-4 py-1.5 border-b border-border">
+                    Type
+                  </th>
+                  <th className="bg-bg-alt font-semibold text-fg-muted uppercase text-[10px] tracking-[0.06em] text-left px-4 py-1.5 border-b border-border">
+                    Title
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {rows.map((row) => {
+                  const badge = mapDocType(row.document_type);
+                  const cellBase = "px-4 py-1.5 text-left border-b border-border";
+                  return (
+                    <tr key={row.document_number} className="hover:bg-bg-alt">
+                      <td className={`${cellBase} whitespace-nowrap`}>
+                        {formatPubDate(row.publication_date)}
+                      </td>
+                      <td className={cellBase}>
+                        <span className={badgeClasses(badge.tone)}>{badge.label}</span>
+                      </td>
+                      <td className={cellBase}>
+                        {row.html_url ? (
+                          <a
+                            href={row.html_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-fg hover:text-orange transition-colors"
+                          >
+                            {row.title}
+                          </a>
+                        ) : (
+                          row.title
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+
+            {/* Pagination bar: prev / page indicator / next */}
+            {totalPages > 1 && (
+              <nav
+                className="flex items-center justify-between px-4 py-3 bg-bg-alt text-[13px]"
+                aria-label="Pagination"
+              >
+                {currentPage > 1 ? (
+                  <Link
+                    href={pageHref(filter, currentPage - 1)}
+                    className="text-fg hover:text-orange transition-colors"
+                  >
+                    ‹ Prev
+                  </Link>
+                ) : (
+                  <span className="text-fg-muted opacity-40 cursor-not-allowed select-none">
+                    ‹ Prev
+                  </span>
+                )}
+
+                <span className="text-fg-muted tabular-nums">
+                  Page {currentPage} of {totalPages.toLocaleString("en-US")}
+                </span>
+
+                {currentPage < totalPages ? (
+                  <Link
+                    href={pageHref(filter, currentPage + 1)}
+                    className="text-fg hover:text-orange transition-colors"
+                  >
+                    Next ›
+                  </Link>
+                ) : (
+                  <span className="text-fg-muted opacity-40 cursor-not-allowed select-none">
+                    Next ›
+                  </span>
+                )}
+              </nav>
+            )}
+          </>
         )}
       </section>
     </MainContent>

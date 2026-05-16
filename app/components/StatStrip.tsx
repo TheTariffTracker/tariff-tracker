@@ -1,5 +1,6 @@
 import { supabase } from "../lib/supabase";
 import StatStripScroller from "./StatStripScroller";
+import InfoIcon from "./InfoIcon";
 
 // Month name lookups, 0-indexed for use with Date.getMonth().
 const MONTH_NAMES_FULL = [
@@ -272,14 +273,10 @@ export default async function StatStrip() {
       <div className="stat-item stat-item-medium">
         <div className="stat-label">
           Tariffed Product Lines
-          <span
-            className="info-icon"
-            title="Count of HTS codes carrying an active trade-action surcharge (Section 232, Section 301, executive surcharges, etc.). A 'product line' is one 10-digit HTS code. Placeholder figure pending Yale Budget Lab effective-rate parsing."
-            aria-label="Source info"
-            role="img"
-          >
-            i
-          </span>
+          <InfoIcon
+            tooltip="Count of HTS codes carrying an active trade-action surcharge (Section 232, Section 301, executive surcharges, etc.). A 'product line' is one 10-digit HTS code. Placeholder figure pending Yale Budget Lab effective-rate parsing."
+            ariaLabel="Source info"
+          />
         </div>
         <div className="stat-value">
           {PRODUCT_LINES_COUNT.toLocaleString("en-US")}

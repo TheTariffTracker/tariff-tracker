@@ -1,4 +1,5 @@
 import { supabase } from "../lib/supabase";
+import InfoIcon from "./InfoIcon";
 
 const MONTH_NAMES = [
   "January",
@@ -112,14 +113,11 @@ export default async function CounterStrip() {
       <div className="counter-strip-inner">
         <div className="counter-label">
           Total Tariff Revenue · Jan 2025 – {data.latestMonthLabel}
-          <span
-            className="counter-info"
-            title="Cent-accurate cumulative figure from the U.S. Treasury's Monthly Treasury Statement (Table 4, Customs Duties line). Reflects net receipts after refunds and drawbacks."
-            aria-label="Source info"
-            role="img"
-          >
-            i
-          </span>
+          <InfoIcon
+            variant="counter"
+            tooltip="Cent-accurate cumulative figure from the U.S. Treasury's Monthly Treasury Statement (Table 4, Customs Duties line). Reflects net receipts after refunds and drawbacks."
+            ariaLabel="Source info"
+          />
         </div>
         <div className="counter-big">
           {formatCentAccurateDollars(data.mtsTotalDollars)}
@@ -128,14 +126,11 @@ export default async function CounterStrip() {
           <div className="counter-provisional">
             +{formatBillions(data.dtsProvisionalDollars!)} since{" "}
             {data.latestMonthLabel} (provisional · all customs receipts)
-            <span
-              className="counter-info"
-              title="From the Daily Treasury Statement. Bundles Customs Duties with Merchandise Processing Fee and Harbor Maintenance Tax, so this figure is slightly broader than the MTS number above. Updates each business day."
-              aria-label="Source info"
-              role="img"
-            >
-              i
-            </span>
+            <InfoIcon
+              variant="counter"
+              tooltip="From the Daily Treasury Statement. Bundles Customs Duties with Merchandise Processing Fee and Harbor Maintenance Tax, so this figure is slightly broader than the MTS number above. Updates each business day."
+              ariaLabel="Source info"
+            />
           </div>
         )}
       </div>

@@ -44,6 +44,11 @@
   --color-fg-muted:      #52525B;
   --color-border:        #E4E4E7;
   --color-border-strong: #D4D4D8;
+
+  /* Tooltip — high-contrast against current theme (dark on light, light on
+     dark). Always stands out against the page background. */
+  --color-tooltip-bg:    #18181B;
+  --color-tooltip-text:  #FAFAFA;
 }
 
 /* Dark mode overrides — only the theme-responsive tokens flip.
@@ -62,6 +67,10 @@
   --color-fg-muted:      #A1A1AA;
   --color-border:        #27272A;
   --color-border-strong: #3F3F46;
+
+  /* Tooltip flips in dark mode — now light bg, dark text. */
+  --color-tooltip-bg:    #FAFAFA;
+  --color-tooltip-text:  #18181B;
 }
 
 body {
@@ -204,10 +213,18 @@ body {
      Also reset letter-spacing so the "i" sits centered in its circle. */
   text-transform: none;
   letter-spacing: 0;
+  /* Anchor for the .tooltip child's absolute positioning. */
+  position: relative;
+  outline: none;
 }
 .counter-info:hover,
 .counter-info:focus {
   color: var(--color-orange-bright);
+}
+.counter-info:hover .tooltip,
+.counter-info:focus .tooltip {
+  visibility: visible;
+  opacity: 1;
 }
 
 /* Narrower screens: tighten the big number a touch so it doesn't wrap. */
@@ -248,10 +265,50 @@ body {
   /* Reset inherited text-transform/letter-spacing from uppercase label parents. */
   text-transform: none;
   letter-spacing: 0;
+  /* Anchor for the .tooltip child's absolute positioning. */
+  position: relative;
+  /* Remove default focus outline; we indicate focus via color change below. */
+  outline: none;
 }
 .info-icon:hover,
 .info-icon:focus {
   color: var(--color-orange-bright);
+}
+.info-icon:hover .tooltip,
+.info-icon:focus .tooltip {
+  visibility: visible;
+  opacity: 1;
+}
+
+/* ==========================================================================
+   Tooltip — 300px dark-bg (or light, in dark mode) box that drops below the
+   info icon on hover or keyboard focus. Sits in absolute positioning
+   relative to the .info-icon parent. Reset inherited text-transform etc. so
+   the tooltip text is readable in uppercase-label contexts (stat-strip).
+   ========================================================================== */
+.tooltip {
+  visibility: hidden;
+  opacity: 0;
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  background: var(--color-tooltip-bg);
+  color: var(--color-tooltip-text);
+  font-size: 12px;
+  font-weight: 400;
+  font-style: normal;
+  font-family: var(--font-sans), system-ui, sans-serif;
+  padding: 10px 12px;
+  border-radius: 4px;
+  width: 300px;
+  z-index: 100;
+  line-height: 1.45;
+  transition: opacity 0.15s;
+  pointer-events: none;
+  text-align: left;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  text-transform: none;
+  letter-spacing: normal;
 }
 
 /* ==========================================================================

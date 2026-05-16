@@ -17,6 +17,7 @@
 // by rounding to the nearest million.
 
 import { supabase } from "../lib/supabase";
+import InfoIcon from "./InfoIcon";
 
 // 2-digit HTS chapter → short, user-friendly name. Based on the WCO HS
 // Convention chapter titles, condensed to match the mockup's tone. Chapter
@@ -286,14 +287,10 @@ export default async function ProductCategoriesCard() {
       <header className="flex justify-between items-center px-4 py-3 border-b border-border gap-4 flex-wrap">
         <h2 className="text-sm font-semibold m-0 flex items-center gap-1.5">
           Top Product Categories by Duties Collected
-          <span
-            className="info-icon"
-            title="Product categories here are 2-digit HTS Chapters. Sourced from Census Bureau import data."
-            aria-label="Source info"
-            role="img"
-          >
-            i
-          </span>
+          <InfoIcon
+            tooltip="Product categories here are 2-digit HTS Chapters. Sourced from Census Bureau import data."
+            ariaLabel="Source info"
+          />
         </h2>
         <span className="text-[11px] text-fg-muted whitespace-nowrap">
           {monthLabel}

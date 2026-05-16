@@ -22,7 +22,7 @@ type NavItem = { label: string; href: string | null };
 const NAV_ITEMS: NavItem[] = [
   { label: "Dashboard", href: "/" },
   { label: "Tariff Browser", href: null },
-  { label: "Revenue Tracker", href: null },
+  { label: "Revenue Tracker", href: "/revenue-tracker" },
   { label: "Itemized Duties", href: null },
   { label: "Incoming Tariffs", href: "/incoming-tariffs" },
   { label: "AD/CVD Orders", href: "/ad-cvd-orders" },

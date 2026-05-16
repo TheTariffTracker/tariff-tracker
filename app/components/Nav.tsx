@@ -25,7 +25,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Revenue Tracker", href: null },
   { label: "Itemized Duties", href: null },
   { label: "Incoming Tariffs", href: "/incoming-tariffs" },
-  { label: "AD/CVD Orders", href: null },
+  { label: "AD/CVD Orders", href: "/ad-cvd-orders" },
   { label: "Historical Archive", href: null },
 ];
 

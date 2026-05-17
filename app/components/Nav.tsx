@@ -26,7 +26,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Itemized Duties", href: null },
   { label: "Incoming Tariffs", href: "/incoming-tariffs" },
   { label: "AD/CVD Orders", href: "/ad-cvd-orders" },
-  { label: "Historical Archive", href: null },
+  { label: "Historical Archive", href: "/historical-archive" },
 ];
 
 export default function Nav() {

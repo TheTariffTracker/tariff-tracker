@@ -209,7 +209,7 @@ export default async function IncomingTariffsPage({
                             href={row.html_url}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-fg hover:text-orange transition-colors"
+                            className="text-orange underline hover:text-orange-bright transition-colors"
                           >
                             {row.title}
                           </a>

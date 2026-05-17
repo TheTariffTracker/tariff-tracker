@@ -1,6 +1,7 @@
 import MainContent from "../components/MainContent";
 import { supabase } from "../lib/supabase";
 import { getCountryName } from "../lib/census-countries";
+import { getChapterName } from "../lib/hts-chapters";
 
 // Historical Archive page (route: "/historical-archive"). Aggregate views of
 // cumulative customs revenue since Jan 2025, broken down three ways:
@@ -22,46 +23,8 @@ const HTS_LIMIT = 25;
 const COUNTRY_LIMIT = 25;
 const CHAPTER_LIMIT = 25;
 
-// ---------- Chapter names (subset — full map lives in ProductCategoriesCard) ----------
-// We only need names for the top ~30 chapters here. Importing the full
-// CHAPTER_NAMES map from ProductCategoriesCard would create a cross-page
-// dependency; inlining the common ones keeps this page self-contained.
-const CHAPTER_NAMES: Record<string, string> = {
-  "03": "Fish and seafood",
-  "27": "Mineral fuels",
-  "29": "Organic chemicals",
-  "30": "Pharmaceuticals",
-  "32": "Dyes and tanning",
-  "33": "Cosmetics and essential oils",
-  "38": "Misc. chemicals",
-  "39": "Plastics",
-  "40": "Rubber",
-  "42": "Leather goods",
-  "44": "Wood",
-  "48": "Paper",
-  "61": "Apparel, knitted",
-  "62": "Apparel, woven",
-  "63": "Other textile articles",
-  "64": "Footwear",
-  "70": "Glass",
-  "71": "Pearls and precious stones",
-  "72": "Iron and steel",
-  "73": "Iron or steel articles",
-  "74": "Copper",
-  "76": "Aluminum",
-  "82": "Tools and cutlery",
-  "83": "Misc. base metal articles",
-  "84": "Mechanical appliances",
-  "85": "Electrical machinery",
-  "87": "Vehicles",
-  "88": "Aircraft",
-  "90": "Optical and medical instruments",
-  "94": "Furniture and lamps",
-  "95": "Toys and games",
-};
-function chapterName(c: string): string {
-  return CHAPTER_NAMES[c] ?? `Chapter ${c}`;
-}
+// Chapter names imported from shared lib (also used by ProductCategoriesCard
+// and Tariff Browser).
 
 // ---------- Formatters ----------
 function formatBillions(dollars: number): string {
@@ -175,7 +138,7 @@ async function fetchChapterTop(): Promise<{
     totalsByChapter.set(r.chapter, cur + Number(r.total_duties));
   }
   const rows = Array.from(totalsByChapter.entries())
-    .map(([chapter, total]) => ({ chapter, name: chapterName(chapter), total }))
+    .map(([chapter, total]) => ({ chapter, name: getChapterName(chapter), total }))
     .sort((a, b) => b.total - a.total)
     .slice(0, CHAPTER_LIMIT);
   return { rows, error: false };

@@ -5,9 +5,9 @@ import { getCountryName } from "../lib/census-countries";
 // Historical Archive page (route: "/historical-archive"). Aggregate views of
 // cumulative customs revenue since Jan 2025, broken down three ways:
 //
-//   1. Top 50 HTS 10-digit product codes (joined to hts_codes for description)
-//   2. All 2-digit chapters (~99 rows, summed across all ingested months)
-//   3. Top 30 source countries (Census Schedule C codes mapped to names)
+//   1. Top 25 HTS 10-digit product codes (joined to hts_codes for description)
+//   2. Top 25 chapters by cumulative duties (summed across all ingested months)
+//   3. Top 25 source countries (Census Schedule C codes mapped to names)
 //
 // **Known v1 gap (per blueprint):** Revenue attribution to specific tariff
 // actions (Section 232, Section 301, IEEPA, etc.) requires the Yale Budget
@@ -15,9 +15,12 @@ import { getCountryName } from "../lib/census-countries";
 // this out. When that lands, a "Revenue by Tariff Action" panel goes here
 // without restructuring the rest of the page.
 
-const HTS_LIMIT = 50;
-const COUNTRY_LIMIT = 30;
-const CHAPTER_LIMIT = 25; // top N chapters; tail beyond this is rounding error
+// Each panel capped at 25 rows so the whole page stays readable without
+// excessive vertical scroll. Tail entries beyond 25 are rounding error
+// in dollar terms.
+const HTS_LIMIT = 25;
+const COUNTRY_LIMIT = 25;
+const CHAPTER_LIMIT = 25;
 
 // ---------- Chapter names (subset — full map lives in ProductCategoriesCard) ----------
 // We only need names for the top ~30 chapters here. Importing the full
@@ -100,7 +103,7 @@ async function fetchHtsTop(): Promise<{
     .order("total_duties", { ascending: false })
     .limit(HTS_LIMIT);
   if (totalsResp.error) {
-    const e = totalsResp.error as Record<string, unknown>;
+    const e = totalsResp.error as unknown as Record<string, unknown>;
     console.error("HistoricalArchive HTS totals error:", {
       typeOf: typeof e,
       constructor: e?.constructor?.name,
@@ -152,7 +155,7 @@ async function fetchChapterTop(): Promise<{
     .from("chapter_duties_monthly")
     .select("chapter, total_duties");
   if (resp.error) {
-    const e = resp.error as Record<string, unknown>;
+    const e = resp.error as unknown as Record<string, unknown>;
     console.error("HistoricalArchive chapter sum error:", {
       typeOf: typeof e,
       constructor: e?.constructor?.name,
@@ -188,7 +191,7 @@ async function fetchCountryTop(): Promise<{
     .order("total_duties", { ascending: false })
     .limit(COUNTRY_LIMIT);
   if (resp.error) {
-    const e = resp.error as Record<string, unknown>;
+    const e = resp.error as unknown as Record<string, unknown>;
     console.error("HistoricalArchive country error:", {
       typeOf: typeof e,
       constructor: e?.constructor?.name,

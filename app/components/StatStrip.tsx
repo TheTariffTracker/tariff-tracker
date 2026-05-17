@@ -96,7 +96,7 @@ async function getStatData(): Promise<StatData> {
     console.error("StatStrip mts_monthly error:", mtsYearResp.error);
   }
   if (frResp.error) {
-    const e = frResp.error as Record<string, unknown>;
+    const e = frResp.error as unknown as Record<string, unknown>;
     console.error("StatStrip federal_register_alerts error:", {
       typeOf: typeof e,
       constructor: e?.constructor?.name,

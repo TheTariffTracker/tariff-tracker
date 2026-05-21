@@ -7,6 +7,7 @@
 // app/globals.css under the .masthead / .masthead-logo / .masthead-tagline /
 // .masthead-text class names referenced below.
 
+import Link from "next/link";
 import { useState, useEffect } from "react";
 
 const STORAGE_KEY = "theme";
@@ -41,14 +42,18 @@ export default function Masthead() {
 
   return (
     <header className="masthead bg-bill-cream flex items-center gap-9 p-8">
-      {/* Logo */}
+      {/* Logo — clickable, returns to "/" (Dashboard). Universal web
+          convention so users who don't recognize "Dashboard" in the nav still
+          have an obvious way home. */}
       <div className="shrink-0">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src="/tariff_tracker_logo.png"
-          alt="Tariff Tracker emblem"
-          className="masthead-logo"
-        />
+        <Link href="/" aria-label="Tariff Tracker home" className="block">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/tariff_tracker_logo.png"
+            alt="Tariff Tracker emblem"
+            className="masthead-logo"
+          />
+        </Link>
       </div>
 
       {/* Centered text block */}

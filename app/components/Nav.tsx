@@ -1,8 +1,15 @@
 // Top navigation strip. Sits below the Masthead and is theme-responsive
 // (the background and border colors flip light↔dark with the theme; the
 // 3px orange top border stays orange always). The active nav item gets a
-// 2px orange underline + foreground text color. The search bar on the
-// right is a non-functional placeholder until we wire up a search backend.
+// 2px orange underline + foreground text color.
+//
+// **Search bar removed 2026-05-19**: previously a non-functional placeholder
+// sat on the right side, hidden below 950px via globals.css's .nav-search
+// rule. Removed because (a) it didn't actually search anything and (b) it
+// was taking nav real estate as we hit 10 nav items. When real search lands
+// (full-text across HTS / FR / receipts / etc.), it goes in the **masthead**,
+// not the nav. The .nav-search media-query rule in globals.css is now dead;
+// safe to clean up next time we're in that file.
 //
 // Client component because we use usePathname() to highlight the active
 // nav item. usePathname requires React state from the App Router runtime,
@@ -29,14 +36,14 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Historical Archive", href: "/historical-archive" },
   { label: "Tariffs & Taxes", href: "/tariffs-and-taxes" },
   { label: "Tariff Trends", href: "/tariff-trends" },
+  { label: "Rate Calculator", href: "/calculator" },
 ];
 
 export default function Nav() {
   const pathname = usePathname();
 
   return (
-    <nav className="flex items-stretch justify-between bg-bg border-t-[3px] border-t-orange border-b border-b-border">
-      {/* Left: scrollable list of nav items */}
+    <nav className="flex items-stretch bg-bg border-t-[3px] border-t-orange border-b border-b-border">
       <div className="nav-items flex flex-1 overflow-x-auto pl-6">
         {NAV_ITEMS.map((item) => {
           const isActive = item.href !== null && pathname === item.href;
@@ -57,21 +64,6 @@ export default function Nav() {
             </Link>
           );
         })}
-      </div>
-
-      {/* Right: pinned search bar. Hidden below 950px via globals.css. */}
-      <div className="nav-search flex items-center px-4 py-1.5 border-l border-l-border shrink-0">
-        <div className="flex items-center bg-bg border border-border-strong rounded px-2.5 py-1.5 w-[260px] focus-within:border-orange">
-          <span className="text-fg-muted mr-2 text-sm" aria-hidden="true">
-            ⌕
-          </span>
-          <input
-            type="text"
-            placeholder="Search tariffs, products, codes…"
-            aria-label="Search tariffs, products, codes"
-            className="bg-transparent border-none text-fg text-[13px] w-full outline-none placeholder:text-fg-muted"
-          />
-        </div>
       </div>
     </nav>
   );

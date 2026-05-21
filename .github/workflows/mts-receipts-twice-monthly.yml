@@ -1,0 +1,34 @@
+name: MTS receipts twice-monthly sync
+
+# Monthly Treasury Statement, full receipts breakdown (Table 4): individual
+# income tax, corporate, payroll/social insurance, excise, customs duties,
+# estate/gift, miscellaneous. Powers the Tariffs & Taxes page.
+#
+# Distinct from the existing `mts-twice-monthly.yml` workflow which pulls
+# ONLY the Customs Duties line from Table 4 into mts_monthly. This one
+# pulls all ~57 categories per month into federal_receipts. Same cadence
+# (1st + 15th), 12 minutes apart so the two don't compete for runners in
+# the same scheduler load batch.
+
+on:
+  schedule:
+    # 13:53 UTC on the 1st and 15th of each month ≈ 8:53 AM ET DST.
+    # Off-hour minute (not 0) avoids the GitHub Actions top-of-hour
+    # scheduling delay — see dts-weekday.yml. Minute differs from the
+    # existing MTS workflow (13:41) so they spread across the hour.
+    - cron: '53 13 1,15 * *'
+  workflow_dispatch: {}
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - run: pip install -r requirements.txt
+      - run: python -m scripts.fetch_mts_receipts
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}

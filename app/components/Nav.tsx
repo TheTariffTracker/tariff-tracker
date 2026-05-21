@@ -28,6 +28,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: "AD/CVD Orders", href: "/ad-cvd-orders" },
   { label: "Historical Archive", href: "/historical-archive" },
   { label: "Tariffs & Taxes", href: "/tariffs-and-taxes" },
+  { label: "Tariff Trends", href: "/tariff-trends" },
 ];
 
 export default function Nav() {

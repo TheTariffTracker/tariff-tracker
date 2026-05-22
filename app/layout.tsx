@@ -56,7 +56,7 @@ export const metadata: Metadata = {
     siteName: "Tariff Tracker",
     title: "Tariff Tracker — U.S. Tariffs and Customs Revenue",
     description:
-      "An independent, nonpartisan record of every U.S. tariff and the revenue it generates. Real-time customs receipts, Federal Register alerts, AD/CVD orders, and the full HTS code reference — sourced from Treasury, Census, USITC, and the Federal Register.",
+      "An independent, nonpartisan record of every U.S. tariff and the revenue it generates — sourced from Treasury, Census, USITC, and the Federal Register.",
     images: [
       {
         url: "/og-image.png",
@@ -70,7 +70,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Tariff Tracker — U.S. Tariffs and Customs Revenue",
     description:
-      "An independent, nonpartisan record of every U.S. tariff and the revenue it generates. Real-time customs receipts, Federal Register alerts, AD/CVD orders, and the full HTS code reference — sourced from Treasury, Census, USITC, and the Federal Register.",
+      "An independent, nonpartisan record of every U.S. tariff and the revenue it generates — sourced from Treasury, Census, USITC, and the Federal Register.",
     images: ["/og-image.png"],
   },
   robots: {

@@ -41,7 +41,7 @@ export const metadata: Metadata = {
   metadataBase: new URL("https://tarifftracker.org"),
   title: {
     template: "%s | Tariff Tracker",
-    default: "Tariff Tracker — An Independent Record of U.S. Tariffs and Revenue",
+    default: "Tariff Tracker — U.S. Tariffs and Customs Revenue",
   },
   description:
     "An independent, nonpartisan record of every U.S. tariff and the revenue it generates. Real-time customs receipts, Federal Register alerts, AD/CVD orders, and the full HTS code reference — sourced from Treasury, Census, USITC, and the Federal Register.",
@@ -54,9 +54,9 @@ export const metadata: Metadata = {
     locale: "en_US",
     url: "https://tarifftracker.org",
     siteName: "Tariff Tracker",
-    title: "Tariff Tracker — An Independent Record of U.S. Tariffs and Revenue",
+    title: "Tariff Tracker — U.S. Tariffs and Customs Revenue",
     description:
-      "An independent, nonpartisan record of every U.S. tariff and the revenue it generates.",
+      "An independent, nonpartisan record of every U.S. tariff and the revenue it generates. Real-time customs receipts, Federal Register alerts, AD/CVD orders, and the full HTS code reference — sourced from Treasury, Census, USITC, and the Federal Register.",
     images: [
       {
         url: "/og-image.png",
@@ -68,9 +68,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Tariff Tracker — An Independent Record of U.S. Tariffs and Revenue",
+    title: "Tariff Tracker — U.S. Tariffs and Customs Revenue",
     description:
-      "An independent, nonpartisan record of every U.S. tariff and the revenue it generates.",
+      "An independent, nonpartisan record of every U.S. tariff and the revenue it generates. Real-time customs receipts, Federal Register alerts, AD/CVD orders, and the full HTS code reference — sourced from Treasury, Census, USITC, and the Federal Register.",
     images: ["/og-image.png"],
   },
   robots: {

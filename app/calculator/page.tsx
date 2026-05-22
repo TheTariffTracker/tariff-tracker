@@ -1,7 +1,14 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import MainContent from "../components/MainContent";
 import { supabase } from "../lib/supabase";
 import { getCountryName } from "../lib/census-countries";
+
+export const metadata: Metadata = {
+  title: "Rate Calculator",
+  description:
+    "Look up the MFN base rate and applicable special programs (Section 232, 301, IEEPA, USMCA) for any HTS code and country of origin.",
+};
 
 // Calculator page (route: "/calculator"). Lite version per the calculator
 // backup plan in project memory: shows the HTS code's base MFN rate, FTA

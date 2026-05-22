@@ -1,7 +1,14 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import MainContent from "../components/MainContent";
 import { supabase } from "../lib/supabase";
 import { HTS_CHAPTER_LIST } from "../lib/hts-chapters";
+
+export const metadata: Metadata = {
+  title: "Itemized Duties",
+  description:
+    "Per-HTS-code customs duty totals from U.S. Census Bureau imports data, with month-by-month breakdowns.",
+};
 
 // Itemized Duties page (route: "/itemized-duties"). Two view modes:
 //

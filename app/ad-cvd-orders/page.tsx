@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import MainContent from "../components/MainContent";
 import { supabase } from "../lib/supabase";
@@ -7,6 +8,12 @@ import {
   formatPubDate,
   mapDocType,
 } from "../lib/fr-badges";
+
+export const metadata: Metadata = {
+  title: "AD/CVD Orders",
+  description:
+    "Antidumping and countervailing duty orders published in the Federal Register — trade-remedy actions targeting specific products and countries.",
+};
 
 // AD/CVD Orders page (route: "/ad-cvd-orders"). Near-clone of Incoming
 // Tariffs but sourced from the `adcvd_fr_alerts` view, which layers a

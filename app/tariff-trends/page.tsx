@@ -1,5 +1,12 @@
+import type { Metadata } from "next";
 import MainContent from "../components/MainContent";
 import { supabase } from "../lib/supabase";
+
+export const metadata: Metadata = {
+  title: "Tariff Trends",
+  description:
+    "Effective tariff rate trends since January 2025 — by authority (Section 232, 301, IEEPA), country group, and economic sector. Source: Yale Budget Lab.",
+};
 
 // Tariff Trends page (route: "/tariff-trends"). Six panels rendering Yale
 // Budget Lab's aggregate ETR data loaded from their April 2026 snapshot.

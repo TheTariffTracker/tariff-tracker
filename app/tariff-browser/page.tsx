@@ -1,7 +1,14 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import MainContent from "../components/MainContent";
 import { supabase } from "../lib/supabase";
 import { HTS_CHAPTER_LIST } from "../lib/hts-chapters";
+
+export const metadata: Metadata = {
+  title: "Tariff Browser",
+  description:
+    "Browse every active HTS code in the U.S. tariff schedule — 29,583 entries with chapter, description, and statistical suffix detail.",
+};
 
 // Tariff Browser page (route: "/tariff-browser"). Searchable, paginated
 // view over the full hts_codes table (~29,583 rows).

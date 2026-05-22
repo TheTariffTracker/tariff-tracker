@@ -38,9 +38,51 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Tariff Tracker",
+  metadataBase: new URL("https://tarifftracker.org"),
+  title: {
+    template: "%s | Tariff Tracker",
+    default: "Tariff Tracker — An Independent Record of U.S. Tariffs and Revenue",
+  },
   description:
-    "An independent, nonpartisan record of every U.S. tariff and the revenue it generates.",
+    "An independent, nonpartisan record of every U.S. tariff and the revenue it generates. Real-time customs receipts, Federal Register alerts, AD/CVD orders, and the full HTS code reference — sourced from Treasury, Census, USITC, and the Federal Register.",
+  applicationName: "Tariff Tracker",
+  authors: [{ name: "Tariff Tracker" }],
+  creator: "Tariff Tracker",
+  publisher: "Tariff Tracker",
+  openGraph: {
+    type: "website",
+    locale: "en_US",
+    url: "https://tarifftracker.org",
+    siteName: "Tariff Tracker",
+    title: "Tariff Tracker — An Independent Record of U.S. Tariffs and Revenue",
+    description:
+      "An independent, nonpartisan record of every U.S. tariff and the revenue it generates.",
+    images: [
+      {
+        url: "/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "Tariff Tracker",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Tariff Tracker — An Independent Record of U.S. Tariffs and Revenue",
+    description:
+      "An independent, nonpartisan record of every U.S. tariff and the revenue it generates.",
+    images: ["/og-image.png"],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
 };
 
 export default function RootLayout({

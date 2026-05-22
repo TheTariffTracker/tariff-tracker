@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import MainContent from "../components/MainContent";
 import { supabase } from "../lib/supabase";
@@ -7,6 +8,12 @@ import {
   formatPubDate,
   mapDocType,
 } from "../lib/fr-badges";
+
+export const metadata: Metadata = {
+  title: "Incoming Tariffs",
+  description:
+    "Federal Register filings from USTR, ITC, CBP, BIS, and ITA — every proposed, final, and notice document related to U.S. tariff policy.",
+};
 
 // Incoming Tariffs page (route: "/incoming-tariffs"). Full Federal Register
 // alerts feed via the agency-filtered `tariff_fr_alerts` Postgres view.

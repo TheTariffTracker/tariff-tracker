@@ -1,5 +1,12 @@
+import type { Metadata } from "next";
 import MainContent from "../components/MainContent";
 import { supabase } from "../lib/supabase";
+
+export const metadata: Metadata = {
+  title: "Tariffs and Taxes",
+  description:
+    "How customs revenue compares to other U.S. federal receipts — individual income tax, corporate, payroll, and excise totals from Treasury MTS data.",
+};
 
 // Tariffs & Taxes page (route: "/tariffs-and-taxes"). Compares customs
 // duty revenue against the other federal receipt categories (individual

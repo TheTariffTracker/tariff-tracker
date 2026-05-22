@@ -1,6 +1,13 @@
+import type { Metadata } from "next";
 import MainContent from "../components/MainContent";
 import ChartCard from "../components/ChartCard";
 import MtsBarChart from "../components/MtsBarChart";
+
+export const metadata: Metadata = {
+  title: "Revenue Tracker",
+  description:
+    "Daily and monthly U.S. customs revenue from the Treasury Daily Treasury Statement and Monthly Treasury Statement, January 2025 to present.",
+};
 
 // Revenue Tracker page (route: "/revenue-tracker"). Two charts stacked:
 //

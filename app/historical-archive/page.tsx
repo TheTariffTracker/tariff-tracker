@@ -1,7 +1,14 @@
+import type { Metadata } from "next";
 import MainContent from "../components/MainContent";
 import { supabase } from "../lib/supabase";
 import { getCountryName } from "../lib/census-countries";
 import { getChapterName } from "../lib/hts-chapters";
+
+export const metadata: Metadata = {
+  title: "Historical Archive",
+  description:
+    "Cumulative tariff revenue since January 2025 by HTS code, chapter, and source country — sourced from Census Bureau International Trade data.",
+};
 
 // Historical Archive page (route: "/historical-archive"). Aggregate views of
 // cumulative customs revenue since Jan 2025, broken down three ways:

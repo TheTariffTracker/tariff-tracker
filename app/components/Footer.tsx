@@ -1,6 +1,8 @@
+import Link from "next/link";
+
 // Footer — site-wide bottom strip. Warm-tint background, 1px top border,
-// sources line on the left, last-refresh timestamp on the right. Flex-wraps
-// when the viewport gets narrow.
+// sources line on the left (ending with the Methodology link), last-refresh
+// timestamp on the right. Flex-wraps when the viewport gets narrow.
 //
 // Mockup spec (.footer):
 //   border-top: 1px solid var(--border)
@@ -19,7 +21,13 @@ export default function Footer() {
       <div className="flex justify-between items-center flex-wrap gap-2">
         <div>
           Sources: USITC HTS · Treasury (DTS, MTS) · Census Bureau · Federal
-          Register
+          Register ·{" "}
+          <Link
+            href="/methodology"
+            className="text-orange underline hover:text-orange-bright transition-colors"
+          >
+            Methodology
+          </Link>
         </div>
         <div>Last data refresh: May 13, 2026</div>
       </div>

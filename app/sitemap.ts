@@ -28,5 +28,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${baseUrl}/tariff-trends`,       lastModified, changeFrequency: "monthly", priority: 0.7 },
     { url: `${baseUrl}/calculator`,          lastModified, changeFrequency: "monthly", priority: 0.6 },
     { url: `${baseUrl}/methodology`,         lastModified, changeFrequency: "monthly", priority: 0.6 },
+    { url: `${baseUrl}/about`,               lastModified, changeFrequency: "monthly", priority: 0.6 },
   ];
 }

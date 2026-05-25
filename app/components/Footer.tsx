@@ -28,6 +28,13 @@ export default function Footer() {
           >
             Methodology
           </Link>
+          {" · "}
+          <Link
+            href="/about"
+            className="text-orange underline hover:text-orange-bright transition-colors"
+          >
+            About
+          </Link>
         </div>
         <div>Last data refresh: May 13, 2026</div>
       </div>

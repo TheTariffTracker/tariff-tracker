@@ -15,8 +15,10 @@ import type { ReactNode } from "react";
 type MainContentProps = {
   /** Page-level H1 — IBM Plex Serif 24px, bold. */
   title: string;
-  /** Short muted-gray description below the title. */
-  subtitle: string;
+  /** Short muted-gray description below the title. Optional; pages that
+   *  don't need a subtitle (e.g. /about) can omit it and the H1 absorbs
+   *  the bottom margin so spacing to body content stays consistent. */
+  subtitle?: string;
   /** Page body content (cards, tables, charts, etc.). */
   children?: ReactNode;
 };
@@ -24,10 +26,16 @@ type MainContentProps = {
 export default function MainContent({ title, subtitle, children }: MainContentProps) {
   return (
     <main className="bg-bg text-fg max-w-[1400px] p-6">
-      <h1 className="font-serif text-2xl font-bold tracking-[-0.02em] m-0 mb-1">
+      <h1
+        className={`font-serif text-2xl font-bold tracking-[-0.02em] m-0 ${
+          subtitle ? "mb-1" : "mb-5"
+        }`}
+      >
         {title}
       </h1>
-      <p className="text-[13px] text-fg-muted m-0 mb-5">{subtitle}</p>
+      {subtitle && (
+        <p className="text-[13px] text-fg-muted m-0 mb-5">{subtitle}</p>
+      )}
 
       {children}
     </main>

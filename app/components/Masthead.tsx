@@ -9,6 +9,7 @@
 
 import Link from "next/link";
 import { useState, useEffect } from "react";
+import InfoMenu from "./InfoMenu";
 
 const STORAGE_KEY = "theme";
 
@@ -41,7 +42,14 @@ export default function Masthead() {
   };
 
   return (
-    <header className="masthead bg-bill-cream flex items-center gap-9 p-8">
+    <header className="masthead bg-bill-cream flex items-center gap-9 p-8 relative">
+      {/* Info menu — anchored to the top-right corner of the masthead, above
+          and independent of the theme toggle. Dropdown opens downward into
+          the masthead content area (z-50 keeps it on top of the tagline). */}
+      <div className="absolute top-3 right-3">
+        <InfoMenu />
+      </div>
+
       {/* Logo — clickable, returns to "/" (Dashboard). Universal web
           convention so users who don't recognize "Dashboard" in the nav still
           have an obvious way home. */}
@@ -84,8 +92,11 @@ export default function Masthead() {
         </div>
       </div>
 
-      {/* Theme toggle (right) */}
-      <div className="shrink-0 flex items-center">
+      {/* Theme toggle (right, nudged down for breathing room from the Info
+          corner button; negative right margin pulls Light past the
+          masthead's p-8 padding so its right edge aligns with Info at
+          right-3 = 12px from the masthead's right edge) */}
+      <div className="shrink-0 flex items-center mt-8 -mr-5">
         <button
           onClick={toggleTheme}
           className="bg-[rgba(255,252,245,0.4)] border border-bill-green-mid text-bill-green-deep px-3 py-1.5 text-xs font-medium rounded cursor-pointer transition-colors hover:border-orange hover:text-orange"

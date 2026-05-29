@@ -10,6 +10,7 @@
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import InfoMenu from "./InfoMenu";
+import SearchBar from "./SearchBar";
 
 const STORAGE_KEY = "theme";
 
@@ -42,14 +43,7 @@ export default function Masthead() {
   };
 
   return (
-    <header className="masthead bg-bill-cream flex items-center gap-9 p-8 relative">
-      {/* Info menu — anchored to the top-right corner of the masthead, above
-          and independent of the theme toggle. Dropdown opens downward into
-          the masthead content area (z-50 keeps it on top of the tagline). */}
-      <div className="absolute top-3 right-3">
-        <InfoMenu />
-      </div>
-
+    <header className="masthead bg-bill-cream flex items-center gap-9 p-8">
       {/* Logo — clickable, returns to "/" (Dashboard). Universal web
           convention so users who don't recognize "Dashboard" in the nav still
           have an obvious way home. */}
@@ -92,17 +86,27 @@ export default function Masthead() {
         </div>
       </div>
 
-      {/* Theme toggle (right, nudged down for breathing room from the Info
-          corner button; negative right margin pulls Light past the
-          masthead's p-8 padding so its right edge aligns with Info at
-          right-3 = 12px from the masthead's right edge) */}
-      <div className="shrink-0 flex items-center mt-8 -mr-5">
+      {/* Right-side control stack — Info, theme toggle, and search spread
+          across the full masthead height: Info pinned top, Light in the
+          middle, Search pinned to the bottom edge, all right-aligned.
+          `self-stretch` makes the column fill the masthead's height so
+          `justify-between` can push Info/Search to the top/bottom edges;
+          `items-end` + `-mr-5` line their right edges up near the far edge
+          (~12px in, matching the original right-3 intent). gap-2.5 only
+          matters on the stacked mobile layout where the column auto-sizes. */}
+      <div className="masthead-controls shrink-0 self-stretch -my-5 -mr-5 flex flex-col justify-between items-end gap-2.5">
+        <InfoMenu />
+        {/* Light sits at the column's vertical midpoint (justify-between),
+            then nudged with translate-y to rest between the "presented" and
+            "January 2025" lines in the tagline copy. Transform-only so it
+            doesn't disturb Info (top) or Search (bottom). */}
         <button
           onClick={toggleTheme}
-          className="bg-[rgba(255,252,245,0.4)] border border-bill-green-mid text-bill-green-deep px-3 py-1.5 text-xs font-medium rounded cursor-pointer transition-colors hover:border-orange hover:text-orange"
+          className="translate-y-[7px] bg-[rgba(255,252,245,0.4)] border border-bill-green-mid text-bill-green-deep px-3 py-1.5 text-xs font-medium rounded cursor-pointer transition-colors hover:border-orange hover:text-orange"
         >
           {mounted ? (theme === "light" ? "☀ Light" : "🌙 Dark") : "☀ Light"}
         </button>
+        <SearchBar />
       </div>
     </header>
   );

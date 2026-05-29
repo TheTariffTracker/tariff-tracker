@@ -116,21 +116,20 @@ body {
   .masthead-text {
     text-align: center;
   }
+  /* Control stack centers when the masthead switches to a single column
+     (overrides the self-start/items-end used on wide layouts). */
+  .masthead-controls {
+    align-self: center;
+    align-items: center;
+  }
 }
 
 /* ==========================================================================
    Nav strip — secondary navigation below the masthead. Hides its own
-   horizontal scrollbar (we still scroll, just without a visible bar) and
-   collapses the right-pinned search at narrow widths.
+   horizontal scrollbar (we still scroll, just without a visible bar).
    ========================================================================== */
 .nav-items::-webkit-scrollbar {
   height: 0;
-}
-
-@media (max-width: 950px) {
-  .nav-search {
-    display: none;
-  }
 }
 
 /* ==========================================================================

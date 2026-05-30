@@ -35,7 +35,7 @@ from datetime import date
 
 from dotenv import load_dotenv
 
-from scripts.db import SESSION, get_state, set_state, upsert
+from scripts.db import SESSION, SUPABASE_URL, BASE_HEADERS, get_state, set_state, upsert
 
 
 CENSUS_BASE = "https://api.census.gov/data/timeseries/intltrade/imports/hs"
@@ -201,6 +201,38 @@ def filter_and_map(
     return out
 
 
+# ===================== Materialized view refresh =====================
+
+def refresh_trade_mat_views() -> None:
+    """Refresh the 4 mat views that depend on trade_imports.
+
+    Calls the Supabase RPC `refresh_trade_materialized_views()` which runs
+    REFRESH MATERIALIZED VIEW CONCURRENTLY on chapter_duties_monthly,
+    hts_total_duties, country_total_duties, and code_monthly_duties.
+
+    CONCURRENTLY doesn't lock the views during refresh (the live site keeps
+    serving data) but takes ~2x as long. 600s timeout because 4 sequential
+    refreshes over ~1.86M trade_imports rows can take a few minutes total.
+    Raises on non-2xx so a refresh failure is loud (caller will see traceback).
+    """
+    print()
+    print("Refreshing materialized views (chapter, hts, country, code)...")
+    url = f"{SUPABASE_URL}/rest/v1/rpc/refresh_trade_materialized_views"
+    resp = SESSION.post(
+        url,
+        headers=BASE_HEADERS,
+        data="{}",  # empty JSON body for no-args function
+        timeout=600,
+    )
+    if resp.status_code >= 400:
+        print(
+            f"  ERROR refreshing mat views: HTTP {resp.status_code} {resp.text[:300]}",
+            file=sys.stderr,
+        )
+        resp.raise_for_status()
+    print("  Mat views refreshed.")
+
+
 # ===================== Main =====================
 
 def parse_month_arg(argv: list[str]) -> str | None:
@@ -284,6 +316,11 @@ def main(argv: list[str]) -> int:
             set_state(STATE_KEY, month)
             last_successful_month = month
             print(f"  Stored {STATE_KEY} = {month}.")
+
+    # Only refresh mat views when we actually wrote new data. Dry runs skip;
+    # "nothing new to ingest" runs skip (last_successful_month is None).
+    if not dry_run and last_successful_month:
+        refresh_trade_mat_views()
 
     print()
     if last_successful_month:

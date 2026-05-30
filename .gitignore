@@ -72,3 +72,6 @@ Thumbs.db
 # =============================================================================
 *.log
 *.pem
+
+# Sentry Config File
+.env.sentry-build-plugin

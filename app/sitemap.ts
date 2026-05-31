@@ -46,6 +46,28 @@ async function getCountryUrls(
   }));
 }
 
+// Every HTS chapter with recorded duties, mirroring the /chapter/[chapter]
+// generateStaticParams.
+async function getChapterUrls(
+  lastModified: Date,
+): Promise<MetadataRoute.Sitemap> {
+  const { data, error } = await supabase
+    .from("chapter_duties_monthly")
+    .select("chapter");
+  if (error || !data) return [];
+
+  const chapters = new Set<string>();
+  for (const row of data as { chapter: string }[]) {
+    if (row.chapter) chapters.add(row.chapter);
+  }
+  return Array.from(chapters).map((chapter) => ({
+    url: `${baseUrl}/chapter/${chapter}`,
+    lastModified,
+    changeFrequency: "weekly" as const,
+    priority: 0.6,
+  }));
+}
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const lastModified = new Date();
 
@@ -64,6 +86,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${baseUrl}/about`,               lastModified, changeFrequency: "monthly", priority: 0.6 },
   ];
 
-  const countryRoutes = await getCountryUrls(lastModified);
-  return [...staticRoutes, ...countryRoutes];
+  const [countryRoutes, chapterRoutes] = await Promise.all([
+    getCountryUrls(lastModified),
+    getChapterUrls(lastModified),
+  ]);
+  return [...staticRoutes, ...countryRoutes, ...chapterRoutes];
 }

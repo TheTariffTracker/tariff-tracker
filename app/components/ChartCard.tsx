@@ -20,6 +20,9 @@
 //   x position = day offset within the 90-day period, scaled to [40, 780].
 
 import { supabase } from "../lib/supabase";
+import CiteButton from "./CiteButton";
+
+const SITE_URL = "https://tarifftracker.org/";
 
 const VIEWBOX_W = 800;
 const VIEWBOX_H = 280;
@@ -282,9 +285,17 @@ export default async function ChartCard() {
             </span>
           </div>
         </div>
-        <span className="text-[11px] text-fg-muted whitespace-nowrap">
-          Source: Daily Treasury Statement · Data through {formatLongDate(anchorDate)}
-        </span>
+        <div className="flex flex-col items-end gap-0.5">
+          <span className="text-[11px] text-fg-muted whitespace-nowrap">
+            Source: Daily Treasury Statement · Data through {formatLongDate(anchorDate)}
+          </span>
+          <CiteButton
+            figureLabel={`Daily U.S. Customs Receipts, 90 days ending ${formatLongDate(anchorDate)}`}
+            sourceName="U.S. Department of the Treasury, Daily Treasury Statement"
+            dataThrough={formatLongDate(anchorDate)}
+            url={SITE_URL}
+          />
+        </div>
       </header>
 
       <div className="px-4 pb-4 pt-2">

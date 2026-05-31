@@ -427,3 +427,186 @@ a.stat-fr-title:hover,
 a.stat-fr-title:focus {
   text-decoration: underline;
 }
+
+/* ===========================================================================
+   Citation generator (Phase 3.65) — "Cite" buttons + modal dialog.
+   The .cite-button sits next to a cite-worthy figure; clicking opens the
+   .cite-overlay/.cite-modal (rendered into document.body via a portal, so it
+   escapes any overflow:hidden / transformed ancestor). Colors are CSS
+   variables, so the dialog flips correctly in dark mode automatically.
+   =========================================================================== */
+
+/* Trigger button — quiet by default, orange on hover. */
+.cite-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 4px;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: 0.02em;
+  text-transform: none;
+  color: var(--color-fg-muted);
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  text-decoration-thickness: 1px;
+  transition: color 0.15s ease;
+}
+.cite-button:hover,
+.cite-button:focus-visible {
+  color: var(--color-orange-bright);
+  outline: none;
+}
+
+/* Counter-strip variant — lives on the cream dollar-bill background. */
+.cite-button-counter {
+  color: var(--color-bill-text-muted);
+}
+.cite-button-counter:hover,
+.cite-button-counter:focus-visible {
+  color: var(--color-orange-bright);
+}
+/* Put the counter's Cite control on its own centered line below the figure. */
+.counter-cite {
+  margin-top: 8px;
+  text-align: center;
+}
+
+/* Full-viewport dimmed backdrop. */
+.cite-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(0, 0, 0, 0.45);
+}
+
+/* The dialog card. */
+.cite-modal {
+  width: 100%;
+  max-width: 560px;
+  max-height: calc(100vh - 40px);
+  overflow-y: auto;
+  background: var(--color-bg);
+  color: var(--color-fg);
+  border: 1px solid var(--color-border-strong);
+  border-radius: 6px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+  padding: 20px;
+}
+.cite-modal:focus {
+  outline: none;
+}
+
+.cite-modal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.cite-modal-title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+}
+.cite-close {
+  border: 0;
+  background: none;
+  font-size: 22px;
+  line-height: 1;
+  color: var(--color-fg-muted);
+  cursor: pointer;
+  padding: 0 4px;
+}
+.cite-close:hover,
+.cite-close:focus-visible {
+  color: var(--color-orange-bright);
+  outline: none;
+}
+
+.cite-figure-label {
+  margin: 6px 0 14px;
+  font-size: 13px;
+  color: var(--color-fg-muted);
+}
+
+/* Format tabs. */
+.cite-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  border-bottom: 1px solid var(--color-border);
+  margin-bottom: 14px;
+}
+.cite-tab {
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--color-fg-muted);
+  padding: 6px 10px;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+.cite-tab:hover,
+.cite-tab:focus-visible {
+  color: var(--color-fg);
+  outline: none;
+}
+.cite-tab-active {
+  color: var(--color-orange);
+  border-bottom-color: var(--color-orange);
+}
+
+/* Citation text — monospace, selectable, preserves BibTeX line breaks. */
+.cite-text {
+  margin: 0;
+  padding: 12px 14px;
+  background: var(--color-bg-strip);
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--color-fg);
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 280px;
+  overflow-y: auto;
+}
+
+.cite-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 14px;
+}
+.cite-copy {
+  border: 1px solid var(--color-border-strong);
+  background: var(--color-bg-alt);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-fg);
+  padding: 7px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+.cite-copy:hover,
+.cite-copy:focus-visible {
+  border-color: var(--color-orange);
+  color: var(--color-orange);
+  outline: none;
+}

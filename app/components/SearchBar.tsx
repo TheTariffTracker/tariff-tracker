@@ -1,14 +1,13 @@
 "use client";
 
-// SearchBar — compact search control in the masthead's right-side control
-// stack (sits below Info + the theme toggle). Submitting routes to the
-// /search results page; there is no live dropdown by design (decided in the
-// Phase 3.6 search build). Searches HTS codes/descriptions and Federal
-// Register tariff alerts via the search_hts / search_fr Postgres functions
-// that the results page calls.
+// SearchBar — compact search control pinned to the right end of the nav strip
+// (after "More Tools"). Submitting routes to the /search results page; there
+// is no live dropdown by design (decided in the Phase 3.6 search build).
+// Searches HTS codes/descriptions and Federal Register tariff alerts via the
+// search_hts / search_fr Postgres functions that the results page calls.
 //
-// Kept intentionally narrow so the control column doesn't crowd the centered
-// masthead tagline at mid-width viewports.
+// Styled with theme tokens (not the cream masthead palette) since the nav
+// strip flips light↔dark with the body.
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -29,7 +28,7 @@ export default function SearchBar() {
     <form
       role="search"
       onSubmit={onSubmit}
-      className="flex items-center bg-[rgba(255,252,245,0.4)] border border-bill-green-mid rounded transition-colors focus-within:border-orange"
+      className="flex items-center bg-bg-alt border border-border-strong rounded transition-colors focus-within:border-orange"
     >
       <input
         type="search"
@@ -37,12 +36,12 @@ export default function SearchBar() {
         onChange={(e) => setQ(e.target.value)}
         placeholder="Search codes & tariffs"
         aria-label="Search HTS codes and tariff actions"
-        className="w-[150px] bg-transparent px-2.5 py-1.5 text-xs text-bill-green-deep outline-none placeholder:text-bill-text-muted"
+        className="w-[160px] bg-transparent px-2.5 py-1.5 text-xs text-fg outline-none placeholder:text-fg-muted"
       />
       <button
         type="submit"
         aria-label="Search"
-        className="px-2 py-1.5 text-bill-green-deep transition-colors hover:text-orange"
+        className="px-2 py-1.5 text-fg-muted transition-colors hover:text-orange"
       >
         <svg
           width="14"

@@ -10,7 +10,6 @@
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import InfoMenu from "./InfoMenu";
-import SearchBar from "./SearchBar";
 
 const STORAGE_KEY = "theme";
 
@@ -86,27 +85,21 @@ export default function Masthead() {
         </div>
       </div>
 
-      {/* Right-side control stack — Info, theme toggle, and search spread
-          across the full masthead height: Info pinned top, Light in the
-          middle, Search pinned to the bottom edge, all right-aligned.
-          `self-stretch` makes the column fill the masthead's height so
-          `justify-between` can push Info/Search to the top/bottom edges;
-          `items-end` + `-mr-5` line their right edges up near the far edge
-          (~12px in, matching the original right-3 intent). gap-2.5 only
-          matters on the stacked mobile layout where the column auto-sizes. */}
+      {/* Right-side control stack — Info pinned to the top edge, theme toggle
+          pinned to the bottom edge, right-aligned. (Search moved out to the
+          nav strip in the Phase 3.65 nav restructure; Light took search's old
+          bottom spot.) `self-stretch` fills the masthead height so
+          `justify-between` pushes Info up / Light down; `-my-5`/`-mr-5` line
+          their edges up near the masthead's edges. The <900px globals override
+          re-centers the column on mobile. */}
       <div className="masthead-controls shrink-0 self-stretch -my-5 -mr-5 flex flex-col justify-between items-end gap-2.5">
         <InfoMenu />
-        {/* Light sits at the column's vertical midpoint (justify-between),
-            then nudged with translate-y to rest between the "presented" and
-            "January 2025" lines in the tagline copy. Transform-only so it
-            doesn't disturb Info (top) or Search (bottom). */}
         <button
           onClick={toggleTheme}
-          className="translate-y-[7px] bg-[rgba(255,252,245,0.4)] border border-bill-green-mid text-bill-green-deep px-3 py-1.5 text-xs font-medium rounded cursor-pointer transition-colors hover:border-orange hover:text-orange"
+          className="bg-[rgba(255,252,245,0.4)] border border-bill-green-mid text-bill-green-deep px-3 py-1.5 text-xs font-medium rounded cursor-pointer transition-colors hover:border-orange hover:text-orange"
         >
           {mounted ? (theme === "light" ? "☀ Light" : "🌙 Dark") : "☀ Light"}
         </button>
-        <SearchBar />
       </div>
     </header>
   );

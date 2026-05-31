@@ -15,6 +15,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import SearchBar from "./SearchBar";
 
 type NavItem = { label: string; href: string };
 
@@ -127,6 +128,13 @@ export default function Nav() {
             ))}
           </div>
         )}
+      </div>
+
+      {/* Search — pinned to the far right of the strip (ml-auto absorbs the
+          space after More Tools). Moved here from the masthead in the nav
+          restructure. shrink-0 so it keeps its width while the items scroll. */}
+      <div className="flex items-center shrink-0 ml-auto px-4">
+        <SearchBar />
       </div>
     </nav>
   );

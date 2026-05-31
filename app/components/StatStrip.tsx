@@ -2,6 +2,12 @@ import { supabase } from "../lib/supabase";
 import { FR_DOC_TYPES } from "../lib/fr-badges";
 import StatStripScroller from "./StatStripScroller";
 import InfoIcon from "./InfoIcon";
+import CiteButton from "./CiteButton";
+
+const SITE_URL = "https://tarifftracker.org/";
+const DTS_SOURCE = "U.S. Department of the Treasury, Daily Treasury Statement";
+const YTD_SOURCE =
+  "U.S. Department of the Treasury, Monthly Treasury Statement (completed months) and Daily Treasury Statement (current month)";
 
 // Month name lookups, 0-indexed for use with Date.getMonth().
 const MONTH_NAMES_FULL = [
@@ -197,6 +203,10 @@ export default async function StatStrip() {
   const data = await getStatData();
   const now = new Date();
 
+  // Vintage for the daily/MTD/YTD figures: the latest DTS record date.
+  const asOf = data.todayRecordDate ? formatDate(data.todayRecordDate) : null;
+  const currentMonthLabel = `${MONTH_NAMES_FULL[now.getMonth()]} ${now.getFullYear()}`;
+
   // Card 1 sub-line: delta vs prior business day if we have both values,
   // otherwise fall back to the latest record date as a neutral note.
   let card1Sub: { text: string; cls: string } | null = null;
@@ -229,6 +239,15 @@ export default async function StatStrip() {
         {card1Sub && (
           <div className={`stat-delta ${card1Sub.cls}`}>{card1Sub.text}</div>
         )}
+        {data.todayDollars !== null && asOf && (
+          <CiteButton
+            figureLabel={`Daily U.S. Customs Receipts, ${asOf}`}
+            value={formatMillionsFromDollars(data.todayDollars)}
+            sourceName={DTS_SOURCE}
+            dataThrough={asOf}
+            url={SITE_URL}
+          />
+        )}
       </div>
 
       {/* Card 2 — Month-to-Date Revenue */}
@@ -238,8 +257,17 @@ export default async function StatStrip() {
           {data.mtdMillions !== null ? formatMillions(data.mtdMillions) : "—"}
         </div>
         <div className="stat-delta stat-delta-neutral">
-          {MONTH_NAMES_FULL[now.getMonth()]} {now.getFullYear()}
+          {currentMonthLabel}
         </div>
+        {data.mtdMillions !== null && (
+          <CiteButton
+            figureLabel={`Month-to-Date U.S. Customs Receipts, ${currentMonthLabel}`}
+            value={formatMillions(data.mtdMillions)}
+            sourceName={DTS_SOURCE}
+            dataThrough={asOf ?? currentMonthLabel}
+            url={SITE_URL}
+          />
+        )}
       </div>
 
       {/* Card 3 — Calendar YTD Revenue */}
@@ -251,6 +279,15 @@ export default async function StatStrip() {
             : "—"}
         </div>
         <div className="stat-delta stat-delta-neutral">YTD {now.getFullYear()}</div>
+        {data.ytdDollars !== null && (
+          <CiteButton
+            figureLabel={`Calendar Year-to-Date U.S. Customs Receipts, ${now.getFullYear()}`}
+            value={formatMillionsFromDollars(data.ytdDollars)}
+            sourceName={YTD_SOURCE}
+            dataThrough={asOf ?? String(now.getFullYear())}
+            url={SITE_URL}
+          />
+        )}
       </div>
 
       {/* Card 4 — Most Recent Federal Register Alert */}

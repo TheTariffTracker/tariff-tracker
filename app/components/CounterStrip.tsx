@@ -1,5 +1,8 @@
 import { supabase } from "../lib/supabase";
 import InfoIcon from "./InfoIcon";
+import CiteButton from "./CiteButton";
+
+const SITE_URL = "https://tarifftracker.org/";
 
 const MONTH_NAMES = [
   "January",
@@ -133,6 +136,16 @@ export default async function CounterStrip() {
             />
           </div>
         )}
+        <div className="counter-cite">
+          <CiteButton
+            variant="counter"
+            figureLabel={`Total U.S. Tariff Revenue, January 2025 – ${data.latestMonthLabel}`}
+            value={formatCentAccurateDollars(data.mtsTotalDollars)}
+            sourceName="U.S. Department of the Treasury, Monthly Treasury Statement, Table 4 (Customs Duties)"
+            dataThrough={data.latestMonthLabel}
+            url={SITE_URL}
+          />
+        </div>
       </div>
     </section>
   );

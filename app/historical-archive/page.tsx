@@ -298,7 +298,14 @@ export default async function HistoricalArchivePage() {
                   return (
                     <tr key={row.chapter} className="hover:bg-bg-alt">
                       <td className={cellBase}>{row.chapter}</td>
-                      <td className={cellBase}>{row.name}</td>
+                      <td className={cellBase}>
+                        <Link
+                          href={`/chapter/${row.chapter}`}
+                          className="text-orange underline hover:text-orange-bright transition-colors"
+                        >
+                          {row.name}
+                        </Link>
+                      </td>
                       <td className={`${cellBase} text-right tabular-nums`}>
                         {formatBillions(row.total)}
                       </td>

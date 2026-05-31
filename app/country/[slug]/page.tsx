@@ -271,7 +271,14 @@ export default async function CountryProfile({
               {topChapters.map((row) => (
                 <tr key={row.chapter} className="hover:bg-bg-alt">
                   <td className={`${TD_BASE} tabular-nums`}>{row.chapter}</td>
-                  <td className={TD_BASE}>{row.name}</td>
+                  <td className={TD_BASE}>
+                    <Link
+                      href={`/chapter/${row.chapter}`}
+                      className="text-orange underline hover:text-orange-bright transition-colors"
+                    >
+                      {row.name}
+                    </Link>
+                  </td>
                   <td className={`${TD_BASE} text-right tabular-nums`}>
                     {formatDuties(row.duties)}
                   </td>

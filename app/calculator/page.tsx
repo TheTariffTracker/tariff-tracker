@@ -3,6 +3,7 @@ import Link from "next/link";
 import MainContent from "../components/MainContent";
 import { supabase } from "../lib/supabase";
 import { getCountryName } from "../lib/census-countries";
+import { decodeChapter99 } from "../lib/tariff-actions";
 
 export const metadata: Metadata = {
   title: "Rate Calculator",
@@ -59,9 +60,6 @@ const COUNTRY_OPTIONS: Array<{ code: string; label: string }> = [
   { code: "5650", label: "Philippines" },
 ];
 
-// Countries currently affected by IEEPA Fentanyl tariffs.
-const IEEPA_FENTANYL_COUNTRIES = new Set(["5700", "2010", "1220"]);
-
 // ===================== HTS code normalization =====================
 // Accept user input in various formats: "8703230140", "8703.23.01.40",
 // "8703.23.01", "8703". Normalize to dotted form when possible.
@@ -92,72 +90,10 @@ function htsAncestors(code: string): string[] {
 }
 
 // ===================== Chapter 99 reference decoder =====================
-type Authority = {
-  label: string;
-  description: string;
-  countryFilter?: (countryCode: string) => boolean;
-  authoritativeUrl: string;
-};
-
-function decodeChapter99(reference: string): Authority | null {
-  // Reference is like "See 9903.88.01" or "9903.88.01" or with trailing spaces.
-  const m = reference.match(/9903\.(\d{2})\.(\d{2})/);
-  if (!m) return null;
-  const list = m[1];
-
-  if (list === "88") {
-    return {
-      label: "Section 301 (China)",
-      description: "Additional duties on Chinese imports under the Trade Act of 1974.",
-      countryFilter: (c) => c === "5700",
-      authoritativeUrl: "https://ustr.gov/issue-areas/enforcement/section-301-investigations/section-301-china/300-billion-trade-action",
-    };
-  }
-  if (list === "80" || list === "81") {
-    return {
-      label: "Section 232 (Steel)",
-      description: "National-security tariffs on steel imports under Trade Expansion Act §232.",
-      authoritativeUrl: "https://www.commerce.gov/issues/trade-enforcement/section-232-investigations",
-    };
-  }
-  if (list === "85") {
-    return {
-      label: "Section 232 (Aluminum)",
-      description: "National-security tariffs on aluminum imports under Trade Expansion Act §232.",
-      authoritativeUrl: "https://www.commerce.gov/issues/trade-enforcement/section-232-investigations",
-    };
-  }
-  if (list === "94") {
-    return {
-      label: "Section 232 (Autos / Auto parts)",
-      description: "National-security tariffs on imported vehicles or vehicle parts under §232.",
-      authoritativeUrl: "https://www.commerce.gov/issues/trade-enforcement/section-232-investigations",
-    };
-  }
-  if (list === "01") {
-    return {
-      label: "IEEPA Reciprocal (invalidated)",
-      description: "Tariffs imposed under the International Emergency Economic Powers Act. NOTE: SCOTUS invalidated IEEPA tariff authority on 2026-02-20.",
-      authoritativeUrl: "https://home.treasury.gov/policy-issues/financial-sanctions/sanctions-programs-and-country-information",
-    };
-  }
-  if (list === "02") {
-    return {
-      label: "IEEPA Fentanyl",
-      description: "Tariffs imposed under IEEPA to address fentanyl trafficking. Applies to China, Mexico, and Canada.",
-      countryFilter: (c) => IEEPA_FENTANYL_COUNTRIES.has(c),
-      authoritativeUrl: "https://www.whitehouse.gov/briefing-room/presidential-actions/",
-    };
-  }
-  if (list === "03") {
-    return {
-      label: "Section 122 (Balance-of-Payments)",
-      description: "Temporary tariffs imposed under Trade Act §122 to address balance-of-payments issues. Statutory expiry July 2026.",
-      authoritativeUrl: "https://uscode.house.gov/view.xhtml?req=granuleid:USC-prelim-title19-section2132",
-    };
-  }
-  return null;
-}
+// decodeChapter99 + the action definitions moved to app/lib/tariff-actions.ts,
+// the single source of truth shared with the /country profile pages. That's
+// where each action's legal status lives now (so the calculator and the
+// country pages can't drift on, e.g., whether an IEEPA tariff is still valid).
 
 // ===================== Types =====================
 type HtsRow = {
@@ -384,8 +320,8 @@ function Results({
   // don't apply to that country.
   const countryRelevant = decoded.filter((d) => {
     if (!countryCode) return true;
-    if (!d.authority?.countryFilter) return true;
-    return d.authority.countryFilter(countryCode);
+    if (!d.authority) return true;
+    return d.authority.appliesToCountry(countryCode);
   });
 
   return (
@@ -451,8 +387,16 @@ function Results({
                 <li key={i} className="border-l-2 border-orange pl-3">
                   {d.authority ? (
                     <>
-                      <div className="text-[13px] font-semibold text-fg">
+                      <div className="text-[13px] font-semibold text-fg flex items-center gap-2 flex-wrap">
                         {d.authority.label}
+                        {d.authority.status === "invalidated" && (
+                          <span
+                            className="text-[10px] uppercase tracking-wide font-semibold text-red px-1.5 py-0.5 rounded"
+                            style={{ background: "rgba(185,28,28,0.12)" }}
+                          >
+                            Invalidated
+                          </span>
+                        )}
                       </div>
                       <div className="text-[12px] text-fg-muted mt-1">
                         {d.authority.description}
@@ -461,7 +405,7 @@ function Results({
                         Cross-reference: {d.raw}
                       </div>
                       <a
-                        href={d.authority.authoritativeUrl}
+                        href={d.authority.sourceUrl}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-[12px] text-orange underline hover:text-orange-bright transition-colors mt-1 inline-block"

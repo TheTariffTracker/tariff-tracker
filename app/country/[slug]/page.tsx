@@ -15,7 +15,7 @@ import {
   getCountryActions,
   STATUS_AS_OF,
   type TariffAction,
-} from "../../lib/country-tariff-actions";
+} from "../../lib/tariff-actions";
 
 // Country profile — /country/[slug] (Phase 3.65, tool #2).
 //
@@ -292,7 +292,7 @@ export default async function CountryProfile({
         </header>
         <div>
           {actions.map((action) => (
-            <ActionRow key={action.key} action={action} />
+            <ActionRow key={action.id} action={action} />
           ))}
         </div>
         <div className="px-4 py-3 border-t border-border text-[12px] text-fg-muted">

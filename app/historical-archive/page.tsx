@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import MainContent from "../components/MainContent";
 import { supabase } from "../lib/supabase";
-import { getCountryName } from "../lib/census-countries";
+import { getCountryName, getCountrySlug } from "../lib/census-countries";
 import { getChapterName } from "../lib/hts-chapters";
 
 export const metadata: Metadata = {
@@ -333,7 +334,18 @@ export default async function HistoricalArchivePage() {
                   return (
                     <tr key={row.country_code} className="hover:bg-bg-alt">
                       <td className={`${cellBase} tabular-nums`}>{row.country_code}</td>
-                      <td className={cellBase}>{row.name}</td>
+                      <td className={cellBase}>
+                        {row.name.startsWith("Country ") ? (
+                          row.name
+                        ) : (
+                          <Link
+                            href={`/country/${getCountrySlug(row.country_code)}`}
+                            className="text-orange underline hover:text-orange-bright transition-colors"
+                          >
+                            {row.name}
+                          </Link>
+                        )}
+                      </td>
                       <td className={`${cellBase} text-right tabular-nums`}>
                         {formatBillions(row.total)}
                       </td>

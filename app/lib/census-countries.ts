@@ -276,3 +276,67 @@ const CENSUS_COUNTRIES: Record<string, string> = {
 export function getCountryName(code: string): string {
   return CENSUS_COUNTRIES[code] ?? `Country ${code}`;
 }
+
+// ===========================================================================
+// URL slugs — used by the /country/[slug] profile pages (Phase 3.65).
+//
+// We don't expose raw Census codes in URLs ("/country/5700" is opaque and
+// unguessable); instead each country gets a human-readable slug derived from
+// its name ("china", "united-kingdom", "cote-d-ivoire"). Slugs are built once
+// at module load from CENSUS_COUNTRIES so they can never drift out of sync
+// with the name map. If two names ever slugify to the same string, the second
+// one is disambiguated by appending its Census code.
+// ===========================================================================
+
+/** Lowercase, strip diacritics, collapse non-alphanumerics to single hyphens. */
+function slugify(name: string): string {
+  // Decompose accented letters (é -> e + combining mark), then drop the
+  // combining marks by code point (U+0300–U+036F) so "Curaçao" -> "curacao"
+  // rather than "cura-ao". Code-point filtering avoids embedding literal
+  // combining characters in this source file.
+  const decomposed = name.normalize("NFD");
+  let stripped = "";
+  for (const ch of decomposed) {
+    const cp = ch.codePointAt(0) ?? 0;
+    if (cp >= 0x300 && cp <= 0x36f) continue;
+    stripped += ch;
+  }
+  return stripped
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+const CODE_TO_SLUG: Record<string, string> = {};
+const SLUG_TO_CODE: Record<string, string> = {};
+for (const [code, name] of Object.entries(CENSUS_COUNTRIES)) {
+  let slug = slugify(name);
+  if (SLUG_TO_CODE[slug] && SLUG_TO_CODE[slug] !== code) {
+    slug = `${slug}-${code}`; // collision guard
+  }
+  CODE_TO_SLUG[code] = slug;
+  SLUG_TO_CODE[slug] = code;
+}
+
+/** Census code -> URL slug. Falls back to "country-<code>" for unmapped codes. */
+export function getCountrySlug(code: string): string {
+  return CODE_TO_SLUG[code] ?? `country-${code}`;
+}
+
+/** URL slug -> Census code, or null if the slug isn't recognized. */
+export function getCodeFromSlug(slug: string): string | null {
+  return SLUG_TO_CODE[slug] ?? null;
+}
+
+// Column 2 (non-NTR) countries — statutory high duty rates apply rather than
+// the normal MFN/NTR Column 1 rates. Census Schedule C codes. These almost
+// never appear in country_total_duties (little/no dutiable U.S. trade), so the
+// /country profile pages force them into the generated set anyway — they're
+// high-interest names and we want to show their tariff-column status rather
+// than 404. Shared by the country page + sitemap.
+export const COLUMN_2_CODES = new Set([
+  "2390", // Cuba
+  "5790", // North Korea
+  "4621", // Russia
+  "4622", // Belarus
+]);

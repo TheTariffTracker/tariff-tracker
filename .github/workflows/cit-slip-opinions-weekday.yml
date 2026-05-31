@@ -1,0 +1,27 @@
+name: CIT slip opinions weekday sync
+
+# Court of International Trade posts slip opinions on court days (weekdays),
+# ~2-3 per week. We scrape the current-year listing each weekday morning;
+# the upsert is idempotent and also catches amended/unsealed/public-version
+# updates to existing rows.
+
+on:
+  schedule:
+    # 13:37 UTC, Monday-Friday ≈ 8-9 AM ET. Off-hour minute (not 0) avoids the
+    # GitHub Actions top-of-hour scheduling delay — see dts-weekday.yml.
+    - cron: '37 13 * * 1-5'
+  workflow_dispatch: {}
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - run: pip install -r requirements.txt
+      - run: python -m scripts.fetch_cit_slip_opinions
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}

@@ -34,6 +34,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Incoming Tariffs", href: "/incoming-tariffs" },
   { label: "Tariff Calendar", href: "/calendar" },
   { label: "AD/CVD Orders", href: "/ad-cvd-orders" },
+  { label: "CIT Decisions", href: "/cit-decisions" },
   { label: "Historical Archive", href: "/historical-archive" },
   { label: "Tariffs & Taxes", href: "/tariffs-and-taxes" },
   { label: "Tariff Trends", href: "/tariff-trends" },

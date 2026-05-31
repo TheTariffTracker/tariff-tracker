@@ -86,6 +86,48 @@ def fetch_all_for_keyword(keyword: str, gte_date: str) -> list[dict]:
     return out
 
 
+def fetch_effective_dates(start_date: date) -> dict[str, str]:
+    """Decoupled second pass: fetch ONLY document_number + effective_on for the
+    same keyword set, and return a {document_number: effective_on} map.
+
+    This is deliberately separate from collect_documents() so the main fetch's
+    `raw_data` (and every column the existing pages read) is never altered by
+    adding `fields[]`. A failure here can only leave effective_on NULL — it can
+    never degrade the Dashboard FR card, Incoming Tariffs, AD/CVD, or Search.
+    `effective_on` is null for procedural notices (investigations, sunset
+    reviews, hearings), which is exactly what we want — those auto-exclude from
+    the calendar.
+    """
+    eff: dict[str, str] = {}
+    gte = start_date.isoformat()
+    for kw in KEYWORDS:
+        page = 1
+        while True:
+            params = {
+                "conditions[term]": kw,
+                "conditions[publication_date][gte]": gte,
+                "per_page": PAGE_SIZE,
+                "page": page,
+                "order": "newest",
+                # requests serializes a list value as repeated params:
+                # fields[]=document_number&fields[]=effective_on
+                "fields[]": ["document_number", "effective_on"],
+            }
+            resp = SESSION.get(FR_URL, params=params, timeout=FR_FETCH_TIMEOUT)
+            resp.raise_for_status()
+            data = resp.json()
+            for r in data.get("results") or []:
+                num = r.get("document_number")
+                eff_on = r.get("effective_on")
+                if num and eff_on:
+                    eff[num] = eff_on
+            total_pages = data.get("total_pages") or 1
+            if page >= total_pages:
+                break
+            page += 1
+    return eff
+
+
 # ===================== Merge & map =====================
 
 def collect_documents(start_date: date) -> dict[str, dict]:
@@ -108,7 +150,7 @@ def collect_documents(start_date: date) -> dict[str, dict]:
     return by_doc
 
 
-def map_record(num: str, entry: dict) -> dict:
+def map_record(num: str, entry: dict, eff_dates: dict[str, str]) -> dict:
     r = entry["doc"]
     keywords_matched = sorted(entry["keywords"])
     return {
@@ -119,6 +161,9 @@ def map_record(num: str, entry: dict) -> dict:
         "abstract": r.get("abstract"),
         "html_url": r.get("html_url"),
         "keywords_matched": keywords_matched,
+        # effective_on comes from the decoupled second pass — NOT from r, so
+        # raw_data stays byte-identical to the pre-calendar pipeline.
+        "effective_on": eff_dates.get(num),
         "raw_data": r,
         # is_active_tariff intentionally not set — defaults to NULL (unreviewed).
     }
@@ -162,8 +207,14 @@ def main(argv: list[str]) -> int:
         print("No documents found. Nothing to write.")
         return 0
 
+    # 2b. Decoupled second pass: effective dates only. Kept separate so the
+    # main fetch's raw_data is never altered (see fetch_effective_dates).
+    print("Fetching effective dates (decoupled pass) ...")
+    eff_dates = fetch_effective_dates(start_date)
+    print(f"  effective_on present for {len(eff_dates)} of {len(by_doc)} documents.")
+
     # 3. Map
-    mapped = [map_record(num, entry) for num, entry in by_doc.items()]
+    mapped = [map_record(num, entry, eff_dates) for num, entry in by_doc.items()]
     max_pub_date = max(
         (m["publication_date"] for m in mapped if m["publication_date"]),
         default=None,

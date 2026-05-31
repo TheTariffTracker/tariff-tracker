@@ -32,6 +32,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Revenue Tracker", href: "/revenue-tracker" },
   { label: "Itemized Duties", href: "/itemized-duties" },
   { label: "Incoming Tariffs", href: "/incoming-tariffs" },
+  { label: "Tariff Calendar", href: "/calendar" },
   { label: "AD/CVD Orders", href: "/ad-cvd-orders" },
   { label: "Historical Archive", href: "/historical-archive" },
   { label: "Tariffs & Taxes", href: "/tariffs-and-taxes" },

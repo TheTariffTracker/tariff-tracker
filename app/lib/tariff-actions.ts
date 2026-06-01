@@ -14,16 +14,21 @@
 // hand-maintained, date-stamped metadata. Re-verify on the schedule and update
 // STATUS_AS_OF + the affected entries when the law moves.
 //
-// LEGAL STATUS AS OF May 2026 (verified 2026-05-30):
+// LEGAL STATUS AS OF June 2026 (verified 2026-06-01):
 //   • 2026-02-20 — SCOTUS held (6-3) that IEEPA does not authorize tariffs,
 //     striking down BOTH the "reciprocal" trade-deficit tariffs AND the
 //     fentanyl/trafficking tariffs on China, Mexico, and Canada.
-//   • The administration announced Section 122 (balance-of-payments) as the
-//     replacement (~10% across the board, statutory time limit).
+//   • Section 122 (balance-of-payments) replaced them — initially ~10%, then
+//     raised to 15% (statutory max) effective 2026-02-24. On 2026-05-07 the
+//     Court of International Trade (Oregon v. United States) held it unlawful,
+//     but the injunction binds only the named plaintiffs, so it remains in
+//     force for the vast majority of importers; the government appealed to the
+//     Federal Circuit on 2026-05-08. The 150-day authority expires ~2026-07-24
+//     unless Congress acts — re-check in July.
 //   • Section 301 (China) and Section 232 (steel/aluminum/autos) rest on
 //     separate authorities and were unaffected by the ruling.
 
-export const STATUS_AS_OF = "May 2026";
+export const STATUS_AS_OF = "June 2026";
 
 export type TariffActionStatus = "active" | "invalidated";
 
@@ -130,8 +135,8 @@ const SECTION_122: TariffAction = {
   scope: "Global — applies to most imports",
   status: "active",
   description:
-    "Temporary balance-of-payments surcharge under Trade Act §122, announced as the replacement for the invalidated IEEPA tariffs. Subject to a statutory time limit.",
-  note: "Announced as the replacement for the invalidated IEEPA tariffs — a temporary across-the-board surcharge subject to a statutory time limit. Details were still being finalized as of this writing.",
+    "Temporary balance-of-payments surcharge under Trade Act §122 that replaced the invalidated IEEPA tariffs — now 15% (the statutory maximum) on most imports. The 150-day authority expires around July 24, 2026 unless Congress extends it.",
+  note: "Replaced the invalidated IEEPA tariffs: an across-the-board surcharge raised to 15% (the statutory maximum) effective February 24, 2026. The Court of International Trade held it unlawful on May 7, 2026, but the injunction binds only the named plaintiffs, so it remains in force for most importers; the government has appealed to the Federal Circuit. The 150-day authority expires around July 24, 2026 unless Congress extends it.",
   sourceUrl:
     "https://uscode.house.gov/view.xhtml?req=granuleid:USC-prelim-title19-section2132",
   chapter99Lists: ["03"],

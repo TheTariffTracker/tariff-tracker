@@ -1,9 +1,10 @@
 // Top navigation strip. Theme-responsive (bg/border flip light↔dark; the 3px
 // orange top border stays). Active item gets a 2px orange underline.
 //
-// Phase 3.65 nav restructure: 9 highest-value tools live on the visible strip,
-// ordered thematically (home → revenue → current actions → lookup → trends);
-// 3 secondary/reference tools live behind a "More Tools" dropdown. The new
+// Phase 3.65 / Tool #6 nav restructure: 9 highest-value tools live on the
+// visible strip, ordered thematically (home → revenue → revenue composition →
+// forward-looking → lookups → utilities); 4 secondary/reference tools live
+// behind a "More Tools" dropdown. The new
 // page *types* (Country and HTS Chapter profiles) are intentionally NOT in the
 // nav — they're hundreds of pages reached via in-page links and search.
 //
@@ -23,18 +24,19 @@ const VISIBLE_ITEMS: NavItem[] = [
   { label: "Dashboard", href: "/" },
   { label: "Revenue Tracker", href: "/revenue-tracker" },
   { label: "Tariffs & Taxes", href: "/tariffs-and-taxes" },
+  { label: "1912 vs Today", href: "/1912-vs-today" },
   { label: "Incoming Tariffs", href: "/incoming-tariffs" },
   { label: "Tariff Calendar", href: "/calendar" },
   { label: "CIT Decisions", href: "/cit-decisions" },
   { label: "Tariff Browser", href: "/tariff-browser" },
   { label: "Rate Calculator", href: "/calculator" },
-  { label: "Tariff Trends", href: "/tariff-trends" },
 ];
 
 const MORE_TOOLS_ITEMS: NavItem[] = [
   { label: "Itemized Duties", href: "/itemized-duties" },
   { label: "AD/CVD Orders", href: "/ad-cvd-orders" },
   { label: "Historical Archive", href: "/historical-archive" },
+  { label: "Tariff Trends", href: "/tariff-trends" },
 ];
 
 const ITEM_BASE =

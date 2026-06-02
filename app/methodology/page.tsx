@@ -565,6 +565,133 @@ export default function MethodologyPage() {
           calendar.
         </p>
 
+        <h2
+          id="1912-vs-today"
+          className="text-2xl font-bold mt-10 mb-3 font-serif scroll-mt-24"
+        >
+          1912 vs Today
+        </h2>
+        <p>
+          The{" "}
+          <a href="/1912-vs-today" className={linkClass}>
+            1912 vs Today
+          </a>{" "}
+          tool asks a single arithmetic question: if the federal government funded
+          today&apos;s spending using the same revenue <em>mix</em> it used in 1912
+          (the last full fiscal year before the 16th Amendment authorized an income
+          tax) what would tariffs need to be? It is a mathematical comparison, not a
+          forecast or a policy recommendation.
+        </p>
+
+        <h3 className="text-lg font-semibold mt-6 mb-2">The 1912 baseline</h3>
+        <p>
+          We anchor to fiscal year 1912 (ended June 30, 1912) on an{" "}
+          <strong>ordinary-receipts-and-expenditures, excluding-postal</strong>{" "}
+          basis. The Post Office was a self-funding service whose receipts and
+          outlays roughly cancel; including it inflates both sides and distorts the
+          revenue mix. On this basis, 1912 receipts were $692.6 million and
+          expenditures $689.9 million (for all intents and purposes, balanced) with
+          no income tax. Figures are shown in nominal (then-year) dollars: the tool
+          compares proportions, not inflation-adjusted magnitudes.
+        </p>
+        <ul className="list-disc list-outside ml-6 space-y-2">
+          <li>Customs duties (tariffs): $311.3M: 45%</li>
+          <li>
+            Internal revenue (excise, chiefly alcohol &amp; tobacco): $322.5M: 47%
+          </li>
+          <li>Miscellaneous receipts: $58.8M: 8%</li>
+        </ul>
+        <p>
+          Totals are drawn from the OMB Historical Tables (Table 1.1, which covers
+          receipts and outlays back to 1901) and the Treasury Annual Report for
+          FY1912; the receipts composition is from the Census Bureau&apos;s{" "}
+          <em>Historical Statistics of the United States</em> (Series Y), because
+          OMB&apos;s receipts-by-source table only extends back to FY1934. The 1912
+          outlay composition shown for context (national defense, Civil War
+          pensions, and so on) is the Treasury departmental classification, rounded;
+          it is illustrative and does not feed the calculation.
+        </p>
+
+        <h3 className="text-lg font-semibold mt-6 mb-2">
+          Today&apos;s spending and revenue
+        </h3>
+        <p>
+          Current figures come from the Monthly Treasury Statement (MTS). Total
+          federal <strong>outlays</strong> (the spending the 1912 mix must cover)
+          come from MTS Table 5&apos;s{" "}
+          <code className={codeClass}>Total Outlays</code> line (net of offsetting
+          receipts), stored in our <code className={codeClass}>federal_outlays</code>{" "}
+          table. Current revenue by source (individual income, corporate,
+          payroll/social insurance, customs, excise, and miscellaneous) comes from
+          MTS Table 4, stored in{" "}
+          <code className={codeClass}>federal_receipts</code>. Cross-month queries
+          match categories by{" "}
+          <code className={codeClass}>classification_desc</code>, never by the
+          numeric classification id, which Treasury reassigns with each publication.
+        </p>
+
+        <h3 className="text-lg font-semibold mt-6 mb-2">The calculation</h3>
+        <p>
+          For a chosen set of taxes to abolish, the taxes you <em>retain</em> keep
+          collecting at their current levels. The rest of spending must be raised
+          from 1912-style sources (tariffs, excise, miscellaneous) in 1912
+          proportions:
+        </p>
+        <ul className="list-disc list-outside ml-6 space-y-2">
+          <li>Revenue needed (N) = total spending &minus; retained taxes</li>
+          <li>
+            Tariff target = 45% &times; N; excise = 47% &times; N; miscellaneous =
+            8% &times; N. The engine uses the precise 1912 shares (0.4495 / 0.4656 /
+            0.0849); published percentages are rounded.
+          </li>
+        </ul>
+        <p>
+          The tool shows three scopes of &ldquo;abolish the income tax&rdquo;:
+          individual income tax only (the default, and the dominant public meaning
+          of the phrase); individual plus corporate; and individual plus corporate
+          plus payroll. The widest scope retains nothing, so its tariff target is
+          simply 45% of total spending: the same as funding the entire government on
+          the pure 1912 mix.
+        </p>
+
+        <h3 className="text-lg font-semibold mt-6 mb-2">Which period</h3>
+        <p>
+          Two views are shown. The <strong>fiscal-year</strong> panel uses the most
+          recent <em>finalized</em> fiscal year: we read the full-year total from
+          the fiscal-year-to-date figures at that year&apos;s September month-end
+          publication, and only treat a year as finalized once a later month has
+          published (confirming September is settled, not preliminary). The{" "}
+          <strong>trailing-12-months</strong> panel sums the twelve most recent
+          monthly figures and updates with every MTS release (twice a month).
+        </p>
+
+        <h3 className="text-lg font-semibold mt-6 mb-2">Caveats</h3>
+        <ul className="list-disc list-outside ml-6 space-y-2">
+          <li>
+            <strong>Mathematical, not behavioral:</strong> We report what the
+            revenue arithmetic requires. We don&apos;t model how high tariff rates
+            would change import volumes, and therefore the achievable revenue
+            ceiling. The feasibility question is left to the reader.
+          </li>
+          <li>
+            <strong>The excise base has changed:</strong> 1912&apos;s internal
+            revenue was almost entirely alcohol and tobacco excise. Today&apos;s
+            federal excise is largely gasoline, aviation, and telephone user-fees;
+            the same line item, but a functionally different revenue model. The two
+            are not directly comparable.
+          </li>
+          <li>
+            <strong>&ldquo;Balanced,&rdquo; not &ldquo;profitable:&rdquo;</strong> A
+            government running a small surplus is balanced; we avoid business-style
+            &ldquo;profit&rdquo; language.
+          </li>
+          <li>
+            <strong>No editorial position:</strong> The tool presents the math;
+            whether a no-income-tax revenue structure is achievable or desirable is
+            the reader&apos;s conclusion to draw.
+          </li>
+        </ul>
+
         <h2 className="text-2xl font-bold mt-10 mb-3 font-serif">
           How to verify our numbers
         </h2>

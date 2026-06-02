@@ -82,6 +82,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${baseUrl}/tariff-browser`,      lastModified, changeFrequency: "weekly",  priority: 0.7 },
     { url: `${baseUrl}/itemized-duties`,     lastModified, changeFrequency: "weekly",  priority: 0.7 },
     { url: `${baseUrl}/tariffs-and-taxes`,   lastModified, changeFrequency: "monthly", priority: 0.7 },
+    { url: `${baseUrl}/1912-vs-today`,       lastModified, changeFrequency: "monthly", priority: 0.7 },
     { url: `${baseUrl}/tariff-trends`,       lastModified, changeFrequency: "monthly", priority: 0.7 },
     { url: `${baseUrl}/calculator`,          lastModified, changeFrequency: "monthly", priority: 0.6 },
     { url: `${baseUrl}/methodology`,         lastModified, changeFrequency: "monthly", priority: 0.6 },

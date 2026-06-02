@@ -1,0 +1,31 @@
+name: MTS outlays twice-monthly sync
+
+# Monthly Treasury Statement, total federal outlays (Table 5 "Total Outlays"
+# grand-total line): current-month net outlays + current/prior fiscal-year-to-
+# date net. Powers the spending denominator for the "1912 vs Today" tool.
+#
+# Companion to mts-receipts-twice-monthly.yml (Table 4 receipts breakdown).
+# Same cadence (1st + 15th); minute staggered from the other MTS workflows
+# (:41 customs, :53 receipts, :47 here) so they don't compete for runners.
+
+on:
+  schedule:
+    # 13:47 UTC on the 1st and 15th of each month ≈ 8:47 AM ET DST.
+    # Off-hour minute (not 0) avoids the GitHub Actions top-of-hour
+    # scheduling delay — see dts-weekday.yml.
+    - cron: '47 13 1,15 * *'
+  workflow_dispatch: {}
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - run: pip install -r requirements.txt
+      - run: python -m scripts.fetch_mts_outlays
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}

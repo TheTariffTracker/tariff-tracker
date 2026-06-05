@@ -135,8 +135,22 @@ export default function Nav() {
       {/* Search — pinned to the far right of the strip (ml-auto absorbs the
           space after More Tools). Moved here from the masthead in the nav
           restructure. shrink-0 so it keeps its width while the items scroll. */}
-      <div className="flex items-center shrink-0 ml-auto px-4">
+      <div className="flex items-center shrink-0 ml-auto px-3">
         <SearchBar />
+      </div>
+
+      {/* Support — soft-orange pill linking to Ko-fi. Outermost-right element;
+          deliberately the only filled control in the strip so it reads as the
+          one call-to-action without shouting. */}
+      <div className="flex items-center shrink-0 pr-4">
+        <a
+          href="https://ko-fi.com/tarifftracker"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="px-3 py-1 rounded-full text-[13px] font-medium whitespace-nowrap bg-orange-soft text-orange hover:bg-orange-soft-hover transition-colors"
+        >
+          Support
+        </a>
       </div>
     </nav>
   );

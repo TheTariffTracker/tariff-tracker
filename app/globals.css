@@ -19,6 +19,9 @@
      ========================================================================== */
   --color-orange:        #C2410C;
   --color-orange-bright: #F97316;
+  /* Soft orange fill — Support button in the nav strip (Ko-fi link) */
+  --color-orange-soft:       #FFEDD5;
+  --color-orange-soft-hover: #FED7AA;
   --color-blue:          #1D4ED8;
   --color-green:         #15803D;
   --color-red:           #B91C1C;
@@ -55,6 +58,8 @@
    Dollar-bill palette intentionally NOT overridden. */
 [data-theme="dark"] {
   --color-orange:        #FB923C;
+  --color-orange-soft:       #431407;
+  --color-orange-soft-hover: #7C2D12;
   --color-blue:          #60A5FA;
   --color-green:         #4ADE80;
   --color-red:           #F87171;

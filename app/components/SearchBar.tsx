@@ -36,7 +36,7 @@ export default function SearchBar() {
         onChange={(e) => setQ(e.target.value)}
         placeholder="Search codes & tariffs"
         aria-label="Search HTS codes and tariff actions"
-        className="w-[160px] bg-transparent px-2.5 py-1.5 text-xs text-fg outline-none placeholder:text-fg-muted"
+        className="w-[130px] bg-transparent px-2.5 py-1.5 text-xs text-fg outline-none placeholder:text-fg-muted"
       />
       <button
         type="submit"

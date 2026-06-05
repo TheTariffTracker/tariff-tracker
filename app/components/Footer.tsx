@@ -36,6 +36,19 @@ export default function Footer() {
             About
           </Link>
         </div>
+        {/* Support — center item of the row (individual project, not a
+            501(c)(3); see project memory: "Donate Button"). */}
+        <div>
+          <a
+            href="https://ko-fi.com/tarifftracker"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-orange underline hover:text-orange-bright transition-colors"
+          >
+            Support Tariff Tracker
+          </a>{" "}
+          — tips welcome, not tax-deductible.
+        </div>
         <div>Last data refresh: May 13, 2026</div>
       </div>
     </footer>

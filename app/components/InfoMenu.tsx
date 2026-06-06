@@ -79,6 +79,14 @@ export default function InfoMenu() {
           >
             Methodology
           </Link>
+          <Link
+            href="/tool-faq"
+            role="menuitem"
+            onClick={() => setOpen(false)}
+            className="block px-4 py-2 text-xs text-bill-green-deep hover:bg-[rgba(0,0,0,0.04)] hover:text-orange transition-colors"
+          >
+            Tool FAQ
+          </Link>
         </div>
       )}
     </div>

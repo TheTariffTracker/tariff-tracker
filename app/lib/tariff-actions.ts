@@ -27,10 +27,13 @@
 //     authority expires ~2026-07-24 unless Congress extends it (currently
 //     considered unlikely) — RE-CHECK right after 2026-07-24, when this record
 //     most likely flips to expired/invalidated.
-//   • Section 301 (China) and Section 232 (steel/aluminum/autos) rest on
-//     separate authorities and were unaffected by the ruling. A 2026-06-01
-//     proclamation (eff. 2026-06-08) refreshed the 232 rates and added copper
-//     as a new 232 category — not yet represented below.
+//   • Section 301 (China) and Section 232 (steel/aluminum/autos/copper) rest
+//     on separate authorities and were unaffected by the ruling. A 2026-06-01
+//     proclamation (eff. 2026-06-08) refreshed the 232 rates; copper (HTS
+//     9903.82.20-.26) is represented below as a display-only record — NOT
+//     wired into the HTS decoder, since 9903.82 is shared with steel/aluminum
+//     derivatives at a finer sub-heading than decode resolves. Revisit in a
+//     232-decoder refresh (see SECTION_232_COPPER).
 
 export const STATUS_AS_OF = "July 2026";
 
@@ -132,6 +135,25 @@ const SECTION_232_AUTOS: TariffAction = {
   appliesToCountry: () => true,
 };
 
+const SECTION_232_COPPER: TariffAction = {
+  id: "section-232-copper",
+  label: "Section 232 (Copper)",
+  authority: "Trade Expansion Act of 1962, §232",
+  scope: "Product-based — covered copper goods from most sources",
+  status: "active",
+  description:
+    "National-security tariffs on imported semi-finished copper and copper-intensive derivative products under §232.",
+  note: "National-security tariffs on covered copper products (semi-finished copper and copper-intensive derivatives) from most sources, subject to country-specific exemptions. Added under the 2026 Section 232 restructuring; unaffected by the 2026 IEEPA ruling.",
+  sourceUrl: COMMERCE_232_URL,
+  // Copper falls under HTS 9903.82.20-.26, but heading 9903.82 is shared with
+  // steel/aluminum derivatives and decodeChapter99() only resolves the 2-digit
+  // list number. Left empty so the calculator never mislabels a 9903.82 code as
+  // copper — display-only until the decoder is upgraded to sub-heading precision.
+  chapter99Lists: [],
+  countrySpecific: false,
+  appliesToCountry: () => true,
+};
+
 const SECTION_122: TariffAction = {
   id: "section-122",
   label: "Section 122 (Balance-of-Payments)",
@@ -185,6 +207,7 @@ const ALL_ACTIONS: TariffAction[] = [
   SECTION_232_STEEL,
   SECTION_232_ALUMINUM,
   SECTION_232_AUTOS,
+  SECTION_232_COPPER,
   SECTION_122,
   IEEPA_RECIPROCAL,
   IEEPA_FENTANYL,
@@ -214,7 +237,7 @@ export function getCountryActions(code: string): TariffAction[] {
   if (SECTION_301.appliesToCountry(code)) actions.push(SECTION_301);
 
   // Active, global / product-based.
-  actions.push(SECTION_232_STEEL, SECTION_232_ALUMINUM, SECTION_232_AUTOS, SECTION_122);
+  actions.push(SECTION_232_STEEL, SECTION_232_ALUMINUM, SECTION_232_AUTOS, SECTION_232_COPPER, SECTION_122);
 
   // Invalidated — shown for context, since they recently applied.
   actions.push(IEEPA_RECIPROCAL);

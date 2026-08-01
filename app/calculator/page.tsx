@@ -5,6 +5,18 @@ import { supabase } from "../lib/supabase";
 import { getCountryName } from "../lib/census-countries";
 import { decodeChapter99 } from "../lib/tariff-actions";
 
+// Badge styling per tariff-action status. Mirrors the lookup on the country
+// profile page; the calculator only ever renders the non-active variants.
+const STATUS_BADGE: Record<
+  string,
+  { label: string; textClass: string; bg: string }
+> = {
+  active: { label: "Active", textClass: "text-green", bg: "rgba(21,128,61,0.12)" },
+  pending: { label: "Pending", textClass: "text-orange", bg: "rgba(234,88,12,0.12)" },
+  expired: { label: "Expired", textClass: "text-fg-muted", bg: "rgba(120,120,120,0.15)" },
+  invalidated: { label: "Invalidated", textClass: "text-red", bg: "rgba(185,28,28,0.12)" },
+};
+
 export const metadata: Metadata = {
   title: "Rate Calculator",
   description:
@@ -391,21 +403,10 @@ function Results({
                         {d.authority.label}
                         {d.authority.status !== "active" && (
                           <span
-                            className={`text-[10px] uppercase tracking-wide font-semibold px-1.5 py-0.5 rounded ${
-                              d.authority.status === "expired"
-                                ? "text-fg-muted"
-                                : "text-red"
-                            }`}
-                            style={{
-                              background:
-                                d.authority.status === "expired"
-                                  ? "rgba(120,120,120,0.15)"
-                                  : "rgba(185,28,28,0.12)",
-                            }}
+                            className={`text-[10px] uppercase tracking-wide font-semibold px-1.5 py-0.5 rounded ${STATUS_BADGE[d.authority.status].textClass}`}
+                            style={{ background: STATUS_BADGE[d.authority.status].bg }}
                           >
-                            {d.authority.status === "expired"
-                              ? "Expired"
-                              : "Invalidated"}
+                            {STATUS_BADGE[d.authority.status].label}
                           </span>
                         )}
                       </div>

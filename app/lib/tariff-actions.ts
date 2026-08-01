@@ -14,30 +14,40 @@
 // hand-maintained, date-stamped metadata. Re-verify on the schedule and update
 // STATUS_AS_OF + the affected entries when the law moves.
 //
-// LEGAL STATUS AS OF July 2026 (verified 2026-07-01):
+// LEGAL STATUS AS OF August 2026 (verified 2026-08-01):
 //   • 2026-02-20 — SCOTUS held (6-3) that IEEPA does not authorize tariffs,
 //     striking down BOTH the "reciprocal" trade-deficit tariffs AND the
-//     fentanyl/trafficking tariffs on China, Mexico, and Canada.
-//   • Section 122 (balance-of-payments) replaced them — initially ~10%, then
-//     raised to 15% (statutory max) effective 2026-02-24. On 2026-05-07 the
-//     Court of International Trade held it unlawful, but on 2026-06-11 the
-//     Federal Circuit STAYED that ruling pending appeal (finding the
-//     government likely to succeed), so CBP continues collecting the surcharge
-//     from all importers — including the named plaintiffs. The 150-day
-//     authority expires ~2026-07-24 unless Congress extends it (currently
-//     considered unlikely) — RE-CHECK right after 2026-07-24, when this record
-//     most likely flips to expired/invalidated.
+//     fentanyl/trafficking tariffs on China, Mexico, and Canada. The Court of
+//     International Trade has since ordered CBP to refund the collected duties
+//     (~$165B) and CBP is standing up a refund system ("CAPE"); that affects
+//     refund mechanics, not the invalidated legal status.
+//   • Section 122 (balance-of-payments) — EXPIRED. It replaced the IEEPA
+//     tariffs (raised to 15%, the statutory max, effective 2026-02-24) and then
+//     lapsed BY OPERATION OF LAW at 12:01 a.m. EDT on 2026-07-24 when its
+//     150-day authority ran out; Congress did not extend it. (The 2026-05-07
+//     CIT ruling against it — stayed on 2026-06-11 — was overtaken by the
+//     statutory expiry. This is the flip the prior note predicted.)
+//   • Section 301 FORCED LABOR (NEW) — at 12:01 a.m. EDT on 2026-07-24, the
+//     same minute Section 122 lapsed, a new Section 301 action took effect as
+//     the across-the-board baseline: 10% or 12.5% on ~60 economies (~99.4% of
+//     U.S. imports) found to inadequately ban/enforce against forced-labor
+//     imports. HTS 9903.05.20–.84. Modeled below as a broad active action
+//     (appliesToCountry () => true); refine to the exact 60-economy set + rate
+//     tiers from the FRN annex in a follow-up.
 //   • Section 301 (China) and Section 232 (steel/aluminum/autos/copper) rest
-//     on separate authorities and were unaffected by the ruling. A 2026-06-01
-//     proclamation (eff. 2026-06-08) refreshed the 232 rates; copper (HTS
-//     9903.82.20-.26) is represented below as a display-only record — NOT
+//     on separate authorities and were unaffected by the IEEPA ruling. A
+//     2026-06-01 proclamation (eff. 2026-06-08) refreshed the 232 rates; copper
+//     (HTS 9903.82.20-.26) is represented below as a display-only record — NOT
 //     wired into the HTS decoder, since 9903.82 is shared with steel/aluminum
 //     derivatives at a finer sub-heading than decode resolves. Revisit in a
 //     232-decoder refresh (see SECTION_232_COPPER).
+//   • NOT YET TRACKED (surfaced 2026-07): a separate Section 301 action on
+//     Brazil and Section 338 (Tariff Act of 1930) tariffs on Canada. Add these
+//     if we decide to broaden coverage.
 
-export const STATUS_AS_OF = "July 2026";
+export const STATUS_AS_OF = "August 2026";
 
-export type TariffActionStatus = "active" | "invalidated";
+export type TariffActionStatus = "active" | "invalidated" | "expired";
 
 export type TariffAction = {
   /** Stable id / React key. */
@@ -154,15 +164,31 @@ const SECTION_232_COPPER: TariffAction = {
   appliesToCountry: () => true,
 };
 
+const SECTION_301_FORCED_LABOR: TariffAction = {
+  id: "section-301-forced-labor",
+  label: "Section 301 (Forced Labor)",
+  authority: "Trade Act of 1974, §301",
+  scope: "Global — ~60 economies (~99.4% of U.S. imports)",
+  status: "active",
+  description:
+    "Across-the-board Section 301 duties of 10% or 12.5% on imports from ~60 economies found to inadequately prohibit or enforce against goods produced with forced labor. Took effect July 24, 2026 as the broad baseline that replaced the expired Section 122 surcharge.",
+  note: "Additional duties of 10% or 12.5% on imports from roughly 60 economies (covering about 99.4% of U.S. imports) for failing to adopt or effectively enforce a forced-labor import ban. Effective 12:01 a.m. EDT July 24, 2026 — the same minute the Section 122 surcharge expired — as the replacement across-the-board baseline. Separate legal authority from the IEEPA tariffs and unaffected by the 2026 IEEPA ruling. Goods already subject to Section 232 duties are exempt from this surcharge.",
+  sourceUrl:
+    "https://ustr.gov/about/policy-offices/press-office/press-releases/2026/july/ustr-takes-action-forced-labor-section-301-investigations",
+  chapter99Lists: ["05"],
+  countrySpecific: false,
+  appliesToCountry: () => true,
+};
+
 const SECTION_122: TariffAction = {
   id: "section-122",
   label: "Section 122 (Balance-of-Payments)",
   authority: "Trade Act of 1974, §122",
-  scope: "Global — applies to most imports",
-  status: "active",
+  scope: "Formerly most imports",
+  status: "expired",
   description:
-    "Temporary balance-of-payments surcharge under Trade Act §122 that replaced the invalidated IEEPA tariffs — now 15% (the statutory maximum) on most imports. The 150-day authority expires around July 24, 2026 unless Congress extends it.",
-  note: "Replaced the invalidated IEEPA tariffs: an across-the-board surcharge raised to 15% (the statutory maximum) effective February 24, 2026. The Court of International Trade held it unlawful on May 7, 2026, but the Federal Circuit stayed that ruling on June 11, 2026 pending appeal — finding the government likely to succeed — so CBP continues collecting the surcharge from all importers, including the named plaintiffs. The 150-day authority expires around July 24, 2026 unless Congress extends it, which is currently considered unlikely.",
+    "Temporary balance-of-payments surcharge under Trade Act §122 that replaced the invalidated IEEPA tariffs (raised to 15%, the statutory maximum). Its 150-day authority expired by operation of law on July 24, 2026; Congress did not extend it, so it is no longer in effect.",
+  note: "Replaced the invalidated IEEPA tariffs as an across-the-board surcharge, raised to 15% (the statutory maximum) effective February 24, 2026. Its 150-day statutory authority expired by operation of law at 12:01 a.m. EDT on July 24, 2026, and Congress did not extend it, so it is no longer in effect. (A May 7, 2026 Court of International Trade ruling against it was stayed on June 11, 2026 and then overtaken by the expiry.) A new Section 301 forced-labor action took effect the same minute as the replacement baseline.",
   sourceUrl:
     "https://uscode.house.gov/view.xhtml?req=granuleid:USC-prelim-title19-section2132",
   chapter99Lists: ["03"],
@@ -201,9 +227,10 @@ const IEEPA_FENTANYL: TariffAction = {
 };
 
 // Order matters for the calculator's first-match decode and the country page's
-// display order (active first, invalidated last).
+// display order (active first, then expired/invalidated).
 const ALL_ACTIONS: TariffAction[] = [
   SECTION_301,
+  SECTION_301_FORCED_LABOR,
   SECTION_232_STEEL,
   SECTION_232_ALUMINUM,
   SECTION_232_AUTOS,
@@ -228,7 +255,8 @@ export function decodeChapter99(reference: string): TariffAction | null {
  * Returns the tariff actions relevant to a country, active-first. Global /
  * product-based actions appear for every country; country-specific actions
  * (301, IEEPA fentanyl) appear only for the countries they targeted. The
- * invalidated IEEPA actions are included for recent-history context.
+ * expired Section 122 surcharge and the invalidated IEEPA actions are included
+ * for recent-history context.
  */
 export function getCountryActions(code: string): TariffAction[] {
   const actions: TariffAction[] = [];
@@ -237,10 +265,16 @@ export function getCountryActions(code: string): TariffAction[] {
   if (SECTION_301.appliesToCountry(code)) actions.push(SECTION_301);
 
   // Active, global / product-based.
-  actions.push(SECTION_232_STEEL, SECTION_232_ALUMINUM, SECTION_232_AUTOS, SECTION_232_COPPER, SECTION_122);
+  actions.push(
+    SECTION_301_FORCED_LABOR,
+    SECTION_232_STEEL,
+    SECTION_232_ALUMINUM,
+    SECTION_232_AUTOS,
+    SECTION_232_COPPER,
+  );
 
-  // Invalidated — shown for context, since they recently applied.
-  actions.push(IEEPA_RECIPROCAL);
+  // No longer in effect — shown for context, since they recently applied.
+  actions.push(SECTION_122, IEEPA_RECIPROCAL);
   if (IEEPA_FENTANYL.appliesToCountry(code)) actions.push(IEEPA_FENTANYL);
 
   return actions;

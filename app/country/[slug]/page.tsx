@@ -139,33 +139,28 @@ const SECTION_TITLE = "text-sm font-semibold m-0";
 const TH_BASE = "text-[11px] uppercase tracking-wide text-fg-muted font-semibold px-4 py-2";
 const TD_BASE = "px-4 py-2 text-[13px] border-t border-border";
 
+// Badge styling per tariff-action status. Mirrors the lookup on the calculator.
+const STATUS_BADGE: Record<
+  string,
+  { label: string; textClass: string; bg: string }
+> = {
+  active: { label: "Active", textClass: "text-green", bg: "rgba(21,128,61,0.12)" },
+  pending: { label: "Pending", textClass: "text-orange", bg: "rgba(234,88,12,0.12)" },
+  expired: { label: "Expired", textClass: "text-fg-muted", bg: "rgba(120,120,120,0.15)" },
+  invalidated: { label: "Invalidated", textClass: "text-red", bg: "rgba(185,28,28,0.12)" },
+};
+
 function ActionRow({ action }: { action: TariffAction }) {
-  const isActive = action.status === "active";
-  const isExpired = action.status === "expired";
-  const badgeStyle = isActive
-    ? { background: "rgba(21,128,61,0.12)" }
-    : isExpired
-    ? { background: "rgba(120,120,120,0.15)" }
-    : { background: "rgba(185,28,28,0.12)" };
-  const badgeTextClass = isActive
-    ? "text-green"
-    : isExpired
-    ? "text-fg-muted"
-    : "text-red";
-  const badgeLabel = isActive
-    ? "Active"
-    : isExpired
-    ? "Expired"
-    : "Invalidated";
+  const badge = STATUS_BADGE[action.status];
   return (
     <div className="px-4 py-3 border-t border-border">
       <div className="flex items-center gap-2 flex-wrap">
         <span className="text-[13px] font-semibold">{action.label}</span>
         <span
-          className={`text-[10px] uppercase tracking-wide font-semibold px-1.5 py-0.5 rounded ${badgeTextClass}`}
-          style={badgeStyle}
+          className={`text-[10px] uppercase tracking-wide font-semibold px-1.5 py-0.5 rounded ${badge.textClass}`}
+          style={{ background: badge.bg }}
         >
-          {badgeLabel}
+          {badge.label}
         </span>
       </div>
       <div className="text-[12px] text-fg-muted mt-0.5">

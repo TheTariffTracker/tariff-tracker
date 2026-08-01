@@ -141,10 +141,22 @@ const TD_BASE = "px-4 py-2 text-[13px] border-t border-border";
 
 function ActionRow({ action }: { action: TariffAction }) {
   const isActive = action.status === "active";
+  const isExpired = action.status === "expired";
   const badgeStyle = isActive
     ? { background: "rgba(21,128,61,0.12)" }
+    : isExpired
+    ? { background: "rgba(120,120,120,0.15)" }
     : { background: "rgba(185,28,28,0.12)" };
-  const badgeTextClass = isActive ? "text-green" : "text-red";
+  const badgeTextClass = isActive
+    ? "text-green"
+    : isExpired
+    ? "text-fg-muted"
+    : "text-red";
+  const badgeLabel = isActive
+    ? "Active"
+    : isExpired
+    ? "Expired"
+    : "Invalidated";
   return (
     <div className="px-4 py-3 border-t border-border">
       <div className="flex items-center gap-2 flex-wrap">
@@ -153,7 +165,7 @@ function ActionRow({ action }: { action: TariffAction }) {
           className={`text-[10px] uppercase tracking-wide font-semibold px-1.5 py-0.5 rounded ${badgeTextClass}`}
           style={badgeStyle}
         >
-          {isActive ? "Active" : "Invalidated"}
+          {badgeLabel}
         </span>
       </div>
       <div className="text-[12px] text-fg-muted mt-0.5">

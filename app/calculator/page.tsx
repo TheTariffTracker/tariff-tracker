@@ -389,12 +389,23 @@ function Results({
                     <>
                       <div className="text-[13px] font-semibold text-fg flex items-center gap-2 flex-wrap">
                         {d.authority.label}
-                        {d.authority.status === "invalidated" && (
+                        {d.authority.status !== "active" && (
                           <span
-                            className="text-[10px] uppercase tracking-wide font-semibold text-red px-1.5 py-0.5 rounded"
-                            style={{ background: "rgba(185,28,28,0.12)" }}
+                            className={`text-[10px] uppercase tracking-wide font-semibold px-1.5 py-0.5 rounded ${
+                              d.authority.status === "expired"
+                                ? "text-fg-muted"
+                                : "text-red"
+                            }`}
+                            style={{
+                              background:
+                                d.authority.status === "expired"
+                                  ? "rgba(120,120,120,0.15)"
+                                  : "rgba(185,28,28,0.12)",
+                            }}
                           >
-                            Invalidated
+                            {d.authority.status === "expired"
+                              ? "Expired"
+                              : "Invalidated"}
                           </span>
                         )}
                       </div>

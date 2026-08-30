@@ -87,7 +87,8 @@ async function getPart(url: string): Promise<PartMeta> {
       let rowStart = 0;
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       for (const rg of metadata.row_groups) {
-        const st = rg.columns[htsColIndex].meta_data.statistics || {};
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const st: any = rg.columns?.[htsColIndex]?.meta_data?.statistics ?? {};
         const lo = statStr(st.min_value ?? st.min);
         const hi = statStr(st.max_value ?? st.max);
         const n = Number(rg.num_rows);

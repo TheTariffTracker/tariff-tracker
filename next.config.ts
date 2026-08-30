@@ -3,11 +3,6 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   /* config options here */
-
-  // DuckDB is a native module (node-pre-gyp): it must be require()'d at runtime,
-  // not bundled by Turbopack/webpack. Without this, the build chokes on a stray
-  // .html file inside @mapbox/node-pre-gyp ("Unknown module type").
-  serverExternalPackages: ["duckdb", "duckdb-async"],
 };
 
 export default withSentryConfig(nextConfig, {

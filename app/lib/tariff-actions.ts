@@ -14,7 +14,7 @@
 // hand-maintained, date-stamped metadata. Re-verify on the schedule and update
 // STATUS_AS_OF + the affected entries when the law moves.
 //
-// LEGAL STATUS AS OF August 2026 (verified 2026-08-01):
+// LEGAL STATUS AS OF September 2026 (verified 2026-09-01):
 //   • 2026-02-20 — SCOTUS held (6-3) that IEEPA does not authorize tariffs,
 //     striking down BOTH the "reciprocal" trade-deficit tariffs AND the
 //     fentanyl/trafficking tariffs on China, Mexico, and Canada. The Court of
@@ -45,14 +45,18 @@
 //   • Section 301 (BRAZIL) and Section 338 (CANADA) — tracked as display-only,
 //     country-specific records. Brazil: 25% on most Brazilian goods (HTS
 //     9903.05.01), effective 2026-07-22. Canada §338: 50% on ~554 auto/dairy/
-//     alcohol lines (HTS 9903.03.12–.14), announced 2026-07-20, EFFECTIVE
-//     2026-08-19 (status "pending" until then). Both carry empty chapter99Lists
-//     because their sub-headings collide at the 2-digit decoder (05.01 with
-//     forced-labor 05.20–.84; 03.12–.14 with the expired 122 "03"), so they
-//     surface on country pages only until decodeChapter99 gains sub-heading
-//     precision (same limitation as SECTION_232_COPPER).
+//     alcohol lines (HTS 9903.03.12–.14), announced 2026-07-20 and now IN FORCE
+//     since 2026-08-22 — a presidential proclamation temporarily suspended the
+//     duties for three days, pushing them off the original 2026-08-19 date.
+//     (Flipped "pending" → "active" in the September 2026 verification. No
+//     record currently uses "pending"; the status is retained for future use.)
+//     Both carry empty chapter99Lists because their sub-headings collide at the
+//     2-digit decoder (05.01 with forced-labor 05.20–.84; 03.12–.14 with the
+//     expired 122 "03"), so they surface on country pages only until
+//     decodeChapter99 gains sub-heading precision (same limitation as
+//     SECTION_232_COPPER).
 
-export const STATUS_AS_OF = "August 2026";
+export const STATUS_AS_OF = "September 2026";
 
 export type TariffActionStatus = "active" | "invalidated" | "expired" | "pending";
 
@@ -280,7 +284,7 @@ const SECTION_301_FORCED_LABOR: TariffAction = {
   status: "active",
   description:
     "Across-the-board Section 301 duties of 10% or 12.5% on imports from ~60 economies found to inadequately prohibit or enforce against goods produced with forced labor. Took effect July 24, 2026 as the broad baseline that replaced the expired Section 122 surcharge.",
-  note: "Additional duties of 10% or 12.5% on imports from roughly 60 economies (covering about 99.4% of U.S. imports) for failing to adopt or effectively enforce a forced-labor import ban. Effective 12:01 a.m. EDT July 24, 2026 — the same minute the Section 122 surcharge expired — as the replacement across-the-board baseline. Separate legal authority from the IEEPA tariffs and unaffected by the 2026 IEEPA ruling. Goods already subject to Section 232 duties are exempt from this surcharge.",
+  note: "Additional duties of 10% or 12.5% on imports from roughly 60 economies (covering about 99.4% of U.S. imports) for failing to adopt or effectively enforce a forced-labor import ban. Effective 12:01 a.m. EDT July 24, 2026 — the same minute the Section 122 surcharge expired — as the replacement across-the-board baseline. Separate legal authority from the IEEPA tariffs and unaffected by the 2026 IEEPA ruling. Goods already subject to Section 232 duties are exempt from this surcharge, as are goods entering free of duty under the USMCA and CAFTA-DR textile and apparel goods.",
   sourceUrl:
     "https://ustr.gov/about/policy-offices/press-office/press-releases/2026/july/ustr-takes-action-forced-labor-section-301-investigations",
   chapter99Lists: ["05"],
@@ -360,10 +364,10 @@ const SECTION_338_CANADA: TariffAction = {
   label: "Section 338 (Canada)",
   authority: "Tariff Act of 1930, §338",
   scope: "Country-specific — covered Canadian autos, dairy, and alcohol",
-  status: "pending",
+  status: "active",
   description:
-    "Additional 50% duties on roughly 554 Canadian tariff lines (motor vehicles, dairy, and alcoholic beverages) under the long-dormant Section 338 authority. Announced July 20, 2026; scheduled to take effect August 19, 2026.",
-  note: "Additional 50% tariff on covered Canadian motor vehicles, dairy, and alcoholic beverages (HTS 9903.03.12–.14) under Section 338 of the Tariff Act of 1930 — the first use of this authority. Announced July 20, 2026 and scheduled to take effect August 19, 2026; applies regardless of USMCA origin. Not yet in effect.",
+    "Additional 50% duties on roughly 554 Canadian tariff lines (motor vehicles, dairy, and alcoholic beverages) under the long-dormant Section 338 authority. Announced July 20, 2026 and effective August 22, 2026.",
+  note: "Additional 50% tariff on covered Canadian motor vehicles, dairy, and alcoholic beverages (HTS 9903.03.12–.14) under Section 338 of the Tariff Act of 1930 — the first use of this authority. Announced July 20, 2026 and effective 12:01 a.m. ET August 22, 2026; a presidential proclamation temporarily suspended the duties for three days, pushing them off the original August 19 effective date. Applies regardless of USMCA origin.",
   sourceUrl:
     "https://www.whitehouse.gov/fact-sheets/2026/07/fact-sheet-president-donald-j-trump-imposes-additional-tariffs-on-canada/",
   // HTS 9903.03.12–.14 shares the 2-digit "03" decode slot with the expired
@@ -382,11 +386,11 @@ const ALL_ACTIONS: TariffAction[] = [
   SECTION_301,
   SECTION_301_BRAZIL,
   SECTION_301_FORCED_LABOR,
+  SECTION_338_CANADA,
   SECTION_232_STEEL,
   SECTION_232_ALUMINUM,
   SECTION_232_AUTOS,
   SECTION_232_COPPER,
-  SECTION_338_CANADA,
   SECTION_122,
   IEEPA_RECIPROCAL,
   IEEPA_FENTANYL,
@@ -408,9 +412,9 @@ export function decodeChapter99(reference: string): TariffAction | null {
  * product-based actions appear for every country; country-specific actions
  * (Section 301 China, Section 301 Brazil, the forced-labor Section 301 set,
  * Section 338 Canada, IEEPA fentanyl) appear only for the countries they
- * targeted. Pending actions (announced, not yet in effect) follow the active
- * ones; the expired Section 122 surcharge and the invalidated IEEPA actions are
- * included last for recent-history context.
+ * targeted. Any pending actions (announced, not yet in effect) would follow the
+ * active ones; the expired Section 122 surcharge and the invalidated IEEPA
+ * actions are included last for recent-history context.
  */
 export function getCountryActions(code: string): TariffAction[] {
   const actions: TariffAction[] = [];
@@ -420,6 +424,7 @@ export function getCountryActions(code: string): TariffAction[] {
   if (SECTION_301_BRAZIL.appliesToCountry(code)) actions.push(SECTION_301_BRAZIL);
   if (SECTION_301_FORCED_LABOR.appliesToCountry(code))
     actions.push(SECTION_301_FORCED_LABOR);
+  if (SECTION_338_CANADA.appliesToCountry(code)) actions.push(SECTION_338_CANADA);
 
   // Active, global / product-based.
   actions.push(
@@ -428,9 +433,6 @@ export function getCountryActions(code: string): TariffAction[] {
     SECTION_232_AUTOS,
     SECTION_232_COPPER,
   );
-
-  // Pending — announced, not yet in effect (country-specific).
-  if (SECTION_338_CANADA.appliesToCountry(code)) actions.push(SECTION_338_CANADA);
 
   // No longer in effect — shown for context, since they recently applied.
   actions.push(SECTION_122, IEEPA_RECIPROCAL);

@@ -366,10 +366,15 @@ function EffectiveRate({
         )}
       </div>
 
-      <p className="text-[11px] text-fg-muted mt-1 mb-3">
+      <p className="text-[11px] text-fg-muted mt-1 mb-1">
         In effect {validFrom} → {validUntil} · revision {String(r.revision)} · vintage {effective.vintage}
         {usmca && " · USMCA-eligible"}
       </p>
+      {date > todayISO() && (
+        <p className="text-[11px] text-fg-muted mb-3">
+          Your as-of date is in the future — this reflects rates as currently modeled and assumes no further tariff changes.
+        </p>
+      )}
 
       {/* Per-authority stack */}
       <div className="border-t border-border pt-3">

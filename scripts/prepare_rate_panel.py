@@ -130,10 +130,39 @@ def main(argv: list[str]) -> int:
     ap.add_argument("--parts", type=int, default=1,
                     help="split output into N hts10-contiguous files under the 50MB "
                          "free-tier cap (default 1 = single file)")
+    ap.add_argument("--vintage", default=None,
+                    help="vintage id (e.g. 2026-07-21-08). When set, output files are "
+                         "named rate_panel_<vintage>_sorted[_partK].parquet so each "
+                         "vintage has unique filenames (no stale-cache collisions on swap).")
+    ap.add_argument("--base-url", default=None,
+                    help="Storage public URL prefix for this bucket (e.g. "
+                         "https://<proj>.supabase.co/storage/v1/object/public/rate-panel/). "
+                         "When given with --vintage, writes current.json listing the part "
+                         "URLs + vintage — upload it to the bucket to point the live app "
+                         "at this vintage (no redeploy).")
     args = ap.parse_args(argv)
 
-    out = args.out or args.src.with_name(args.src.stem + "_sorted.parquet")
+    if args.out:
+        out = args.out
+    elif args.vintage:
+        out = args.src.with_name(f"rate_panel_{args.vintage}_sorted.parquet")
+    else:
+        out = args.src.with_name(args.src.stem + "_sorted.parquet")
     prepare(args.src, out, args.mem, args.threads, args.row_group, args.level, args.parts)
+
+    # Emit current.json (the "current vintage" pointer the app reads) when we
+    # know both the vintage and the Storage URL prefix.
+    if args.vintage and args.base_url:
+        base = args.base_url if args.base_url.endswith("/") else args.base_url + "/"
+        if args.parts <= 1:
+            names = [out.name]
+        else:
+            names = [out.with_name(f"{out.stem}_part{k}.parquet").name
+                     for k in range(1, args.parts + 1)]
+        manifest = {"vintage": args.vintage, "parts": [base + n for n in names]}
+        cj = out.with_name("current.json")
+        cj.write_text(__import__("json").dumps(manifest, indent=2))
+        print(f"wrote {cj} — upload it + the part file(s) to Storage to go live.")
     return 0
 
 

@@ -12,12 +12,14 @@
 // fit Supabase's 50MB free-tier file cap; every part is a contiguous hts10
 // range, so exactly one part (and one row group in it) covers any given code.
 //
-// Env:
-//   RATE_PANEL_URL     comma-separated public URLs of the sorted parquet parts
-//   RATE_PANEL_VINTAGE the vintage id (e.g. "2026-07-21-08") for citation
-//
-// (A future refresh step can replace these env vars with a small current.json
-// manifest in Storage so vintage swaps don't need a redeploy — see Step 8.)
+// Which vintage is live is decided by a "current vintage" pointer:
+//   RATE_PANEL_MANIFEST_URL  a small current.json in Storage:
+//                            { "vintage": "2026-07-21-08", "parts": ["<url1>", "<url2>"] }
+// Swapping vintages = upload the new parts + overwrite current.json. No redeploy;
+// the pointer is re-read on a short TTL. Env fallback (used if no manifest is set
+// or it can't be fetched) keeps the old behavior working:
+//   RATE_PANEL_URL       comma-separated part URLs
+//   RATE_PANEL_VINTAGE   vintage id for citation
 
 import {
   asyncBufferFromUrl,
@@ -26,10 +28,41 @@ import {
 } from "hyparquet";
 import { compressors } from "hyparquet-compressors";
 
-const PART_URLS = (process.env.RATE_PANEL_URL || "")
+// --- current-vintage pointer: manifest first, env vars as fallback ---
+const MANIFEST_URL = process.env.RATE_PANEL_MANIFEST_URL || "";
+const PART_URLS_ENV = (process.env.RATE_PANEL_URL || "")
   .split(",").map((s) => s.trim()).filter(Boolean);
+const RATE_PANEL_VINTAGE_ENV = process.env.RATE_PANEL_VINTAGE || "unknown";
 
-export const RATE_PANEL_VINTAGE = process.env.RATE_PANEL_VINTAGE || "unknown";
+type PanelPointer = { vintage: string; parts: string[] };
+
+// Short-TTL cache so overwriting current.json swaps the live vintage within ~a
+// minute without a redeploy, while still avoiding a fetch on every lookup.
+let manifestCache: { at: number; data: PanelPointer } | null = null;
+const MANIFEST_TTL_MS = 60_000;
+
+async function getPanel(): Promise<PanelPointer> {
+  if (MANIFEST_URL) {
+    if (manifestCache && Date.now() - manifestCache.at < MANIFEST_TTL_MS) {
+      return manifestCache.data;
+    }
+    try {
+      const res = await fetch(MANIFEST_URL, { cache: "no-store" });
+      if (res.ok) {
+        const j = (await res.json()) as { vintage?: unknown; parts?: unknown };
+        const parts = Array.isArray(j.parts) ? j.parts.map(String).filter(Boolean) : [];
+        if (parts.length > 0) {
+          const data: PanelPointer = { vintage: String(j.vintage ?? "unknown"), parts };
+          manifestCache = { at: Date.now(), data };
+          return data;
+        }
+      }
+    } catch {
+      // fall through to env fallback below
+    }
+  }
+  return { vintage: RATE_PANEL_VINTAGE_ENV, parts: PART_URLS_ENV };
+}
 
 // Columns returned for a lookup: the full per-authority effective breakdown, the
 // parallel statutory_* set (for the statutory-vs-collected wedge), and the
@@ -143,11 +176,12 @@ export async function lookupRate(
   const d = new Date(date);
   const query = { hts10, country, date };
 
-  if (PART_URLS.length === 0) {
-    throw new Error("RATE_PANEL_URL is not set");
+  const panel = await getPanel();
+  if (panel.parts.length === 0) {
+    throw new Error("No rate-panel parts configured (RATE_PANEL_MANIFEST_URL and RATE_PANEL_URL both empty)");
   }
 
-  for (const url of PART_URLS) {
+  for (const url of panel.parts) {
     const part = await getPart(url);
     const grp = part.groups.find(([lo, hi]) => hts10 >= lo && hts10 <= hi);
     if (!grp) continue;
@@ -177,7 +211,7 @@ export async function lookupRate(
       hit.valid_until = toISODate(hit.valid_until);
       return {
         found: true,
-        vintage: RATE_PANEL_VINTAGE,
+        vintage: panel.vintage,
         query,
         rate: hit,
         flags: {
@@ -191,7 +225,7 @@ export async function lookupRate(
 
   return {
     found: false,
-    vintage: RATE_PANEL_VINTAGE,
+    vintage: panel.vintage,
     query,
     reason: "no covering interval — code/country not in the schedule on that date",
   };

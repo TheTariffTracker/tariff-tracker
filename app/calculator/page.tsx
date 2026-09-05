@@ -4,6 +4,7 @@ import { supabase } from "../lib/supabase";
 import { getCountryName } from "../lib/census-countries";
 import { decodeChapter99 } from "../lib/tariff-actions";
 import { lookupRate, type RateLookup } from "../lib/rate-panel";
+import CiteButton from "../components/CiteButton";
 
 // Badge styling per tariff-action status. Mirrors the lookup on the country
 // profile page; the calculator only ever renders the non-active variants.
@@ -352,6 +353,15 @@ function EffectiveRate({
   const dutyExact = !specific && Number.isFinite(customsValue) && customsValue > 0;
   const duty = dutyExact ? totalRate * customsValue : null;
 
+  // Vintage-stamped, reproducible citation for this exact lookup.
+  const citeData = {
+    figureLabel: `Effective tariff rate — HTS ${plainDigits}, ${getCountryName(countryInput)}, as of ${date}`,
+    value: formatPct(totalRate),
+    sourceName: "The Budget Lab at Yale, Tariff Rate Tracker",
+    dataThrough: `Yale Tariff Rate Tracker vintage ${effective.vintage}`,
+    url: `https://tarifftracker.org/calculator?code=${plainDigits}&country=${countryInput}&date=${date}`,
+  };
+
   return wrap(
     <>
       <div className="flex items-baseline gap-3 flex-wrap">
@@ -416,6 +426,10 @@ function EffectiveRate({
           )}
         </div>
       )}
+
+      <div className="border-t border-border pt-3 mt-3">
+        <CiteButton {...citeData} />
+      </div>
     </>
   );
 }

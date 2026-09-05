@@ -118,6 +118,15 @@ function todayISO(): string {
   return new Date().toISOString().slice(0, 10);
 }
 
+// hyparquet returns parquet DATE columns as JS Date objects (UTC midnight).
+// Normalize to a "YYYY-MM-DD" string in UTC so every consumer — this lib's
+// direct callers, the API's JSON, the calculator's server render — sees the
+// same value with no local-timezone off-by-one.
+function toISODate(v: unknown): string {
+  if (v instanceof Date) return v.toISOString().slice(0, 10);
+  return String(v).slice(0, 10);
+}
+
 /**
  * Look up the effective tariff rate for one HTS-10 code × country on a date.
  * `date` defaults to today. Returns found:false when no interval covers the
@@ -162,7 +171,10 @@ export async function lookupRate(
 
     if (hit) {
       const bt = String(hit.base_rate_type);
-      const validFrom = new Date(hit.valid_from as string);
+      // Normalize the interval dates to clean UTC YYYY-MM-DD strings for callers.
+      const vf = toISODate(hit.valid_from);
+      hit.valid_from = vf;
+      hit.valid_until = toISODate(hit.valid_until);
       return {
         found: true,
         vintage: RATE_PANEL_VINTAGE,
@@ -170,7 +182,8 @@ export async function lookupRate(
         rate: hit,
         flags: {
           specificOrCompound: bt === "specific_or_compound" || bt === "other",
-          notYetEffective: validFrom > new Date(todayISO()),
+          // Both are "YYYY-MM-DD" strings; lexical compare is chronological.
+          notYetEffective: vf > todayISO(),
         },
       };
     }

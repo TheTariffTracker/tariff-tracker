@@ -25,6 +25,12 @@ CREATE POLICY "Public read cit_slip_opinions"
 
 GRANT SELECT ON cit_slip_opinions TO anon, authenticated;
 
+-- Supabase stops auto-granting Data API access to new public-schema tables
+-- on 2026-10-30. Without this, a fresh run of this script produces a table
+-- the Python fetcher cannot write to (PostgREST upserts fail with
+-- permission denied). Added 2026-10-17.
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.cit_slip_opinions TO service_role;
+
 CREATE INDEX IF NOT EXISTS cit_slip_opinions_date
   ON cit_slip_opinions (decision_date DESC);
 CREATE INDEX IF NOT EXISTS cit_slip_opinions_jurisdiction

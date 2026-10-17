@@ -38,3 +38,13 @@ CREATE POLICY "Public read" ON federal_outlays
   FOR SELECT USING (true);
 
 GRANT SELECT ON federal_outlays TO anon, authenticated;
+
+-- Supabase stops auto-granting Data API access to new public-schema tables
+-- on 2026-10-30. Without this, a fresh run of this script produces a table
+-- the Python fetcher cannot write to (PostgREST upserts fail with
+-- permission denied). Added 2026-10-17.
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.federal_outlays TO service_role;
+
+-- Reload PostgREST's schema cache so the new table is queryable via the API
+-- immediately. (Was missing from this script; added 2026-10-17.)
+NOTIFY pgrst, 'reload schema';

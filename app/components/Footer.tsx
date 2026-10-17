@@ -1,8 +1,8 @@
 import Link from "next/link";
 
 // Footer — site-wide bottom strip. Warm-tint background, 1px top border,
-// sources line on the left (ending with the Methodology link), last-refresh
-// timestamp on the right. Flex-wraps when the viewport gets narrow.
+// sources line on the left (ending with the Methodology link) and the
+// support link on the right. Flex-wraps when the viewport gets narrow.
 //
 // Mockup spec (.footer):
 //   border-top: 1px solid var(--border)
@@ -11,9 +11,12 @@ import Link from "next/link";
 //   background: var(--bg-warm) — theme-responsive warm tint
 //   font-size: 12px, color: var(--text-muted)
 //
-// Last-refresh timestamp is hardcoded for v1. When the data pipeline
-// publishes a single "last refresh" signal we can trust, swap this for a
-// real value (see project memory: "Mock data still in place").
+// A site-wide "last data refresh" line was REMOVED 2026-10-17. It had been
+// hardcoded to "May 13, 2026" and sat five months stale directly beneath
+// live data. Do not re-add it: no single date can honestly describe this
+// site, because DTS updates daily, MTS twice monthly, and Census lags ~2
+// months. Per-panel source lines carry real derived dates instead (e.g.
+// the dashboard chart's "Data through <date>").
 
 export default function Footer() {
   return (
@@ -49,7 +52,6 @@ export default function Footer() {
           </a>{" "}
           — tips welcome, not tax-deductible.
         </div>
-        <div>Last data refresh: May 13, 2026</div>
       </div>
     </footer>
   );

@@ -23,6 +23,7 @@ type CounterData = {
   mtsTotalDollars: number;
   latestMonthLabel: string;
   dtsProvisionalDollars: number | null;
+  provisionalRangeLabel: string | null;
 };
 
 async function getCounterData(): Promise<CounterData | null> {
@@ -62,22 +63,42 @@ async function getCounterData(): Promise<CounterData | null> {
 
   const { data: dtsRows, error: dtsError } = await supabase
     .from("dts_daily")
-    .select("customs_revenue_today")
+    .select("record_date, customs_revenue_today")
     .gte("record_date", cutoffDate);
 
   let dtsProvisionalDollars: number | null = null;
+  let provisionalRangeLabel: string | null = null;
   if (dtsError) {
     console.error("CounterStrip: dts_daily fetch error", dtsError);
   } else {
+    const rows = dtsRows ?? [];
     // DTS amounts are in MILLIONS of dollars. Convert to dollars.
-    const dtsMillions = (dtsRows ?? []).reduce(
+    const dtsMillions = rows.reduce(
       (sum, r) => sum + Number(r.customs_revenue_today ?? 0),
       0,
     );
     dtsProvisionalDollars = dtsMillions * 1_000_000;
+
+    // Latest DTS day we actually hold. Printed as the end of the provisional
+    // range, which doubles as the site's freshness signal now that the
+    // footer's hardcoded refresh date is gone. ISO date strings compare
+    // lexicographically, so a plain string max is correct here.
+    const maxDate = rows.reduce<string | null>(
+      (max, r) =>
+        !max || String(r.record_date) > max ? String(r.record_date) : max,
+      null,
+    );
+    if (maxDate) {
+      provisionalRangeLabel = formatRange(cutoffDate, maxDate);
+    }
   }
 
-  return { mtsTotalDollars, latestMonthLabel, dtsProvisionalDollars };
+  return {
+    mtsTotalDollars,
+    latestMonthLabel,
+    dtsProvisionalDollars,
+    provisionalRangeLabel,
+  };
 }
 
 function formatCentAccurateDollars(amount: number): string {
@@ -92,6 +113,21 @@ function formatCentAccurateDollars(amount: number): string {
 function formatBillions(amount: number): string {
   const billions = amount / 1_000_000_000;
   return `$${billions.toFixed(1)}B`;
+}
+
+// "Sep 1 - Oct 15, 2026" from two ISO dates. The start date carries its year
+// only when the range crosses a year boundary -- a November MTS month leaves
+// "Dec 1, 2026 - Jan 15, 2027". Parsed as UTC so the printed day doesn't
+// shift by timezone (same approach as StatStrip's formatDate).
+function formatRange(startIso: string, endIso: string): string {
+  const s = new Date(startIso + "T00:00:00Z");
+  const e = new Date(endIso + "T00:00:00Z");
+  const sy = s.getUTCFullYear();
+  const ey = e.getUTCFullYear();
+  const sm = MONTH_NAMES[s.getUTCMonth()].slice(0, 3);
+  const em = MONTH_NAMES[e.getUTCMonth()].slice(0, 3);
+  const start = `${sm} ${s.getUTCDate()}${sy !== ey ? `, ${sy}` : ""}`;
+  return `${start} \u2013 ${em} ${e.getUTCDate()}, ${ey}`;
 }
 
 export default async function CounterStrip() {
@@ -127,8 +163,11 @@ export default async function CounterStrip() {
         </div>
         {showProvisional && (
           <div className="counter-provisional">
-            +{formatBillions(data.dtsProvisionalDollars!)} since{" "}
-            {data.latestMonthLabel} (provisional · all customs receipts)
+            +{formatBillions(data.dtsProvisionalDollars!)}
+            {data.provisionalRangeLabel
+              ? ` · ${data.provisionalRangeLabel}`
+              : ""}{" "}
+            (provisional · all customs receipts)
             <InfoIcon
               variant="counter"
               tooltip="From the Daily Treasury Statement. Bundles Customs Duties with Merchandise Processing Fee and Harbor Maintenance Tax, so this figure is slightly broader than the MTS number above. Updates each business day."

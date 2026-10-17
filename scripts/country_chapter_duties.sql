@@ -54,3 +54,9 @@ BEGIN
   REFRESH MATERIALIZED VIEW CONCURRENTLY country_chapter_duties;
 END;
 $$;
+
+-- scripts/fetch_census_trade.py calls this via PostgREST RPC with the
+-- service_role key. That works today only because Postgres grants EXECUTE
+-- on new functions to PUBLIC by default. Stated explicitly so the pipeline
+-- does not depend on that default. Added 2026-10-17.
+GRANT EXECUTE ON FUNCTION refresh_trade_materialized_views() TO service_role;

@@ -15,17 +15,22 @@ Sentry.init({
   // Enable logs to be sent to Sentry
   enableLogs: true,
 
-  // Define how likely Replay events are sampled.
-  // This sets the sample rate to be 10%. You may want this to be 100% while
-  // in development and sample at a lower rate in production
-  replaysSessionSampleRate: 0.1,
+  // Session Replay records a replayable reconstruction of what a visitor saw
+  // and did. ** Deliberately 0: we record NOTHING on a normal visit. ** The
+  // Sentry wizard defaults this to 0.1, which silently recorded 1 in 10 visits
+  // from May to October 2026 -- in direct contradiction with the "No
+  // advertising, no tracking" line printed in the site masthead. Do not raise
+  // it without changing that claim first. Turned off 2026-10-18.
+  replaysSessionSampleRate: 0,
 
-  // Define how likely Replay events are sampled when an error occurs.
+  // Replay IS captured when an error actually occurs, which is the debugging
+  // value Sentry was added for in the first place.
   replaysOnErrorSampleRate: 1.0,
 
-  // Enable sending user PII (Personally Identifiable Information)
-  // https://docs.sentry.io/platforms/javascript/guides/nextjs/configuration/options/#sendDefaultPii
-  sendDefaultPii: true,
+  // ** Deliberately false. ** true (the wizard default) attaches IP addresses
+  // and request details to every event. The debugging value at this traffic
+  // level is negligible; the disclosure burden is not. Turned off 2026-10-18.
+  sendDefaultPii: false,
 });
 
 export const onRouterTransitionStart = Sentry.captureRouterTransitionStart;

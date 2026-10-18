@@ -38,6 +38,13 @@ export default function Footer() {
           >
             About
           </Link>
+          {" \u00b7 "}
+          <Link
+            href="/privacy"
+            className="text-orange underline hover:text-orange-bright transition-colors"
+          >
+            Privacy
+          </Link>
         </div>
         {/* Support — center item of the row (individual project, not a
             501(c)(3); see project memory: "Donate Button"). */}

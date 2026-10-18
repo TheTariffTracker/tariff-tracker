@@ -87,6 +87,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${baseUrl}/calculator`,          lastModified, changeFrequency: "monthly", priority: 0.6 },
     { url: `${baseUrl}/methodology`,         lastModified, changeFrequency: "monthly", priority: 0.6 },
     { url: `${baseUrl}/about`,               lastModified, changeFrequency: "monthly", priority: 0.6 },
+    { url: `${baseUrl}/privacy`,             lastModified, changeFrequency: "yearly",  priority: 0.3 },
   ];
 
   const [countryRoutes, chapterRoutes] = await Promise.all([

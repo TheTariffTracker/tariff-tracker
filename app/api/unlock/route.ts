@@ -22,11 +22,13 @@ import { NextRequest, NextResponse } from "next/server";
 import { randomBytes, createHash } from "node:crypto";
 import { supabaseAdmin } from "../../lib/supabaseAdmin";
 import { validateEmail } from "../../lib/email-validation";
+import { rateLimitHit } from "../../lib/rate-limit";
 import {
   COOKIE_NAME,
   COOKIE_MAX_AGE,
   CONSENT_TEXT_VERSION,
   MAX_NOTE_LENGTH,
+  RATE_LIMITS,
   SEGMENTS,
   SITE_URL,
   SURVEY_VERSION,
@@ -40,6 +42,19 @@ export const maxDuration = 15;
 const MAX_BODY_BYTES = 4096;
 const FROM = "Tariff Tracker <confirm@send.tarifftracker.org>";
 const REPLY_TO = "contact@tarifftracker.org";
+
+/**
+ * Client IP as Vercel's edge reports it. x-forwarded-for is a header and so is
+ * spoofable in principle; the global send cap is the backstop that does not
+ * depend on getting this right. Requests with no usable header share one
+ * "unknown" bucket, which is the conservative behaviour.
+ */
+function clientIp(req: NextRequest): string {
+  const xff = req.headers.get("x-forwarded-for");
+  const first = xff?.split(",")[0]?.trim();
+  if (first) return first;
+  return req.headers.get("x-real-ip")?.trim() || "unknown";
+}
 
 function newToken(): string {
   return randomBytes(32).toString("base64url");
@@ -106,6 +121,25 @@ export async function POST(req: NextRequest) {
   // sitting in people's inboxes if this flag were ever switched back off.
   if (process.env.UNLOCK_ENABLED !== "1") {
     return NextResponse.json({ error: "unlock is not enabled" }, { status: 503 });
+  }
+
+  // ---- per-IP rate limit ------------------------------------------------
+  // Checked before parsing or validating, so a flood costs one DB call each
+  // rather than an MX lookup each. FAILS OPEN if the limiter is unreachable:
+  // a Supabase hiccup must not block real signups, and the global send cap
+  // below still protects the quota.
+  const ip = clientIp(req);
+  const [perHour, perDay] = await Promise.all([
+    rateLimitHit(`unlock:ip:${ip}:hour`, RATE_LIMITS.ipHour.windowSeconds),
+    rateLimitHit(`unlock:ip:${ip}:day`, RATE_LIMITS.ipDay.windowSeconds),
+  ]);
+  const overHour = perHour !== null && perHour > RATE_LIMITS.ipHour.max;
+  const overDay = perDay !== null && perDay > RATE_LIMITS.ipDay.max;
+  if (overHour || overDay) {
+    return NextResponse.json(
+      { error: "too many attempts" },
+      { status: 429, headers: { "Retry-After": "3600" } },
+    );
   }
 
   // ---- parse + bound the body -------------------------------------------
@@ -207,13 +241,34 @@ export async function POST(req: NextRequest) {
   }
 
   // ---- confirmation email (best effort, never fails the request) ---------
+  // Unlike the per-IP check, the global cap FAILS CLOSED: if we cannot confirm
+  // we are under 80 sends today, we don't send. The cost of being wrong in the
+  // other direction is a burned quota and spam complaints against the sending
+  // domain, which under DMARC p=reject takes all mail down.
+  //
+  // Either way the visitor is already unlocked and their row is already saved;
+  // confirm_sent_at simply stays null for the retry job to pick up.
   if (sendTo) {
-    const sent = await sendConfirmation(sendTo, sendToken);
-    if (sent) {
-      await supabaseAdmin
-        .from("lead_capture")
-        .update({ confirm_sent_at: new Date().toISOString() })
-        .eq("email", email);
+    const sendsToday = await rateLimitHit(
+      "unlock:send:global:day",
+      RATE_LIMITS.globalSendDay.windowSeconds,
+    );
+    const underCap =
+      sendsToday !== null && sendsToday <= RATE_LIMITS.globalSendDay.max;
+
+    if (!underCap) {
+      console.warn(
+        "unlock: global daily send cap reached or limiter unavailable; row captured, confirmation deferred",
+        { sendsToday },
+      );
+    } else {
+      const sent = await sendConfirmation(sendTo, sendToken);
+      if (sent) {
+        await supabaseAdmin
+          .from("lead_capture")
+          .update({ confirm_sent_at: new Date().toISOString() })
+          .eq("email", email);
+      }
     }
   }
 

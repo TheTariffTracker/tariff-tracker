@@ -22,6 +22,26 @@ export const CONSENT_TEXT_VERSION = "partner-optin-v1";
 
 export const MAX_NOTE_LENGTH = 500;
 
+// Two limits with DELIBERATELY DIFFERENT failure modes.
+//
+// Per-IP is abuse control: breaching it is rejected outright (429).
+//
+// The global cap protects the thing actually at risk -- the Resend quota and
+// the sending reputation of send.tarifftracker.org, both of which are global
+// and so are untouched by any per-IP limit when an attacker spreads across
+// many addresses. Breaching it does NOT reject the visitor: the row and survey
+// are still captured and the site still unlocks, only the confirmation email
+// is deferred to the retry backlog (confirm_sent_at stays null). Rejecting
+// signup #81 during a traffic spike would throw away the exact leads this
+// system exists to collect.
+//
+// 80/day leaves ~20 of Resend's free 100 as headroom for that backlog.
+export const RATE_LIMITS = {
+  ipHour: { windowSeconds: 3600, max: 5 },
+  ipDay: { windowSeconds: 86400, max: 15 },
+  globalSendDay: { windowSeconds: 86400, max: 80 },
+} as const;
+
 // Stored values are stable slugs, never display text, so rewording a label
 // does not change what is already in the table.
 export const SEGMENTS = [

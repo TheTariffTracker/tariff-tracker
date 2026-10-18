@@ -56,10 +56,11 @@ export default function AboutPage() {
         </p>
 
         <p>
-          This is a free resource and accepts no outside funding, nor does
-          it have any special interests behind it; operational costs are
-          covered privately, with any user donations going toward continued
-          operation.
+          This is a free resource and does not currently accept outside
+          funding, nor does it have any special interests behind it;
+          operational costs are covered privately, with any user donations
+          going toward continued operation. If that ever changes, it will be
+          disclosed here.
         </p>
 
         <p>

@@ -7,7 +7,7 @@
 // race itself under exactly the load a rate limiter exists to handle.
 
 import "server-only";
-import { supabaseAdmin } from "./supabaseAdmin";
+import { getSupabaseAdmin } from "./supabaseAdmin";
 
 /**
  * Record one hit against `bucket` and return the count INCLUDING it.
@@ -18,7 +18,7 @@ export async function rateLimitHit(
   bucket: string,
   windowSeconds: number,
 ): Promise<number | null> {
-  const { data, error } = await supabaseAdmin.rpc("rate_limit_hit", {
+  const { data, error } = await getSupabaseAdmin().rpc("rate_limit_hit", {
     p_bucket: bucket,
     p_window_seconds: windowSeconds,
   });

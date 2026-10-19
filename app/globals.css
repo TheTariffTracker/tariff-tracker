@@ -615,3 +615,291 @@ a.stat-fr-title:focus {
   color: var(--color-orange);
   outline: none;
 }
+
+/* ===========================================================================
+   Unlock modal (Phase 3.7) — lead-capture gate.
+   Mirrors the .cite-* dialog conventions above: rendered into document.body
+   via a portal, colors come from CSS variables so it flips in dark mode.
+   The locked panel (.unlock-locked) is the server-rendered placeholder that
+   sits where gated content would be; its button opens the dialog.
+
+   NOTE on the submit button: it deliberately hardcodes #C2410C instead of
+   using var(--color-orange). In dark mode that variable becomes #FB923C,
+   which is too light to carry white text (fails AA). The fixed deep orange
+   passes on both backgrounds.
+   =========================================================================== */
+
+/* ---------- Locked panel (server-rendered, in-page) ---------- */
+.unlock-locked {
+  border: 1px solid var(--color-border-strong);
+  background: var(--color-bg-alt);
+  border-radius: 4px;
+  padding: 22px 20px;
+  text-align: center;
+}
+.unlock-locked-title {
+  margin: 0 0 6px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-fg);
+}
+.unlock-locked-body {
+  margin: 0 auto 14px;
+  max-width: 44ch;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--color-fg-muted);
+}
+
+/* ---------- Overlay + dialog card ---------- */
+.unlock-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(0, 0, 0, 0.45);
+}
+.unlock-modal {
+  width: 100%;
+  max-width: 520px;
+  max-height: calc(100vh - 40px);
+  overflow-y: auto;
+  background: var(--color-bg);
+  color: var(--color-fg);
+  border: 1px solid var(--color-border-strong);
+  border-radius: 6px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+  padding: 20px;
+}
+.unlock-modal:focus {
+  outline: none;
+}
+.unlock-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+.unlock-title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+}
+.unlock-close {
+  border: 0;
+  background: none;
+  font-size: 22px;
+  line-height: 1;
+  color: var(--color-fg-muted);
+  cursor: pointer;
+  padding: 0 4px;
+}
+.unlock-close:hover,
+.unlock-close:focus-visible {
+  color: var(--color-orange-bright);
+  outline: none;
+}
+.unlock-intro {
+  margin: 8px 0 16px;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--color-fg-muted);
+}
+
+/* ---------- Form fields ---------- */
+.unlock-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-bottom: 14px;
+}
+.unlock-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-fg-muted);
+}
+.unlock-optional {
+  text-transform: none;
+  letter-spacing: 0;
+  font-weight: 400;
+  font-style: italic;
+}
+.unlock-input,
+.unlock-select,
+.unlock-textarea {
+  width: 100%;
+  background: var(--color-bg);
+  color: var(--color-fg);
+  border: 1px solid var(--color-border-strong);
+  border-radius: 4px;
+  padding: 8px 10px;
+  font: inherit;
+  font-size: 13px;
+  line-height: 1.4;
+}
+.unlock-input:focus,
+.unlock-select:focus,
+.unlock-textarea:focus {
+  outline: none;
+  border-color: var(--color-orange);
+}
+.unlock-input::placeholder,
+.unlock-textarea::placeholder {
+  color: var(--color-fg-muted);
+}
+.unlock-textarea {
+  min-height: 62px;
+  resize: vertical;
+}
+.unlock-count {
+  align-self: flex-end;
+  font-size: 11px;
+  color: var(--color-fg-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- Partner opt-in checkbox ----------
+   Normal weight on purpose. The design record requires it be unmistakably
+   optional; visually burying it works against that. */
+.unlock-check {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  margin: 2px 0 16px;
+  padding: 11px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  background: var(--color-bg-strip);
+}
+.unlock-check input[type="checkbox"] {
+  flex: 0 0 auto;
+  margin: 2px 0 0;
+  width: 15px;
+  height: 15px;
+  accent-color: var(--color-orange);
+  cursor: pointer;
+}
+.unlock-check-label {
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--color-fg);
+  cursor: pointer;
+}
+.unlock-check-tag {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-fg-muted);
+  margin-bottom: 2px;
+}
+
+/* ---------- Submit + states ---------- */
+.unlock-submit {
+  width: 100%;
+  border: 1px solid #C2410C;
+  background: #C2410C;
+  color: #FFFFFF;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 10px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+.unlock-submit:hover:not(:disabled),
+.unlock-submit:focus-visible:not(:disabled) {
+  background: #9A3412;
+  border-color: #9A3412;
+  outline: none;
+}
+.unlock-submit:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+.unlock-error {
+  margin: 0 0 12px;
+  padding: 9px 11px;
+  border: 1px solid var(--color-red);
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--color-red) 10%, transparent);
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--color-fg);
+}
+.unlock-fine {
+  margin: 12px 0 0;
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: var(--color-fg-muted);
+  text-align: center;
+}
+.unlock-fine a {
+  color: var(--color-fg-muted);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.unlock-fine a:hover {
+  color: var(--color-orange-bright);
+}
+
+/* ---------- Success state (replaces the form in place) ---------- */
+.unlock-success-title {
+  margin: 0 0 8px;
+  font-size: 15px;
+  font-weight: 700;
+}
+.unlock-success-body {
+  margin: 0 0 12px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--color-fg);
+}
+.unlock-success-note {
+  margin: 0;
+  padding-top: 12px;
+  border-top: 1px solid var(--color-border);
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--color-fg-muted);
+}
+
+/* ---------- Confirmation landing banner ----------
+   /api/confirm redirects to /calculator?confirm=ok|invalid|error. Without
+   something reading that parameter the confirmation click is silent, which is
+   the one action the whole gate asks of people. */
+.unlock-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 20px;
+  padding: 12px 14px;
+  border: 1px solid var(--color-border-strong);
+  border-left-width: 3px;
+  border-radius: 4px;
+  background: var(--color-bg-alt);
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--color-fg);
+}
+.unlock-banner-ok {
+  border-left-color: var(--color-green);
+}
+.unlock-banner-warn {
+  border-left-color: var(--color-red);
+}
+.unlock-banner-title {
+  display: block;
+  font-weight: 700;
+  margin-bottom: 2px;
+}
+.unlock-banner-body {
+  color: var(--color-fg-muted);
+}

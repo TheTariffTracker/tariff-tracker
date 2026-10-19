@@ -20,7 +20,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { randomBytes, createHash } from "node:crypto";
-import { supabaseAdmin } from "../../lib/supabaseAdmin";
+import { getSupabaseAdmin } from "../../lib/supabaseAdmin";
 import { validateEmail } from "../../lib/email-validation";
 import { rateLimitHit } from "../../lib/rate-limit";
 import {
@@ -186,7 +186,7 @@ export async function POST(req: NextRequest) {
   let sendTo: string | null = email;
   let sendToken = confirmToken;
 
-  const { error: insertError } = await supabaseAdmin
+  const { error: insertError } = await getSupabaseAdmin()
     .from("lead_capture")
     .insert({
       email,
@@ -204,7 +204,7 @@ export async function POST(req: NextRequest) {
   if (insertError && insertError.code === "23505") {
     // Already known. Decision 1: one row per person, survey asked once, never
     // re-prompt. So refresh their session WITHOUT overwriting earlier answers.
-    const { data: existing, error: selectError } = await supabaseAdmin
+    const { data: existing, error: selectError } = await getSupabaseAdmin()
       .from("lead_capture")
       .select("unlock_token, verified")
       .eq("email", email)
@@ -228,7 +228,7 @@ export async function POST(req: NextRequest) {
       sendToken = confirmToken;
     }
 
-    const { error: updateError } = await supabaseAdmin
+    const { error: updateError } = await getSupabaseAdmin()
       .from("lead_capture")
       .update(patch)
       .eq("email", email);
@@ -264,7 +264,7 @@ export async function POST(req: NextRequest) {
     } else {
       const sent = await sendConfirmation(sendTo, sendToken);
       if (sent) {
-        await supabaseAdmin
+        await getSupabaseAdmin()
           .from("lead_capture")
           .update({ confirm_sent_at: new Date().toISOString() })
           .eq("email", email);

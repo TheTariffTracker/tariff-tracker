@@ -5,6 +5,8 @@ import { getCountryName } from "../lib/census-countries";
 import { decodeChapter99 } from "../lib/tariff-actions";
 import { lookupRate, type RateLookup } from "../lib/rate-panel";
 import CiteButton from "../components/CiteButton";
+import UnlockGate from "../components/UnlockGate";
+import { getUnlockStatus, type UnlockStatus } from "../lib/unlock-status";
 
 // Badge styling per tariff-action status. Mirrors the lookup on the country
 // profile page; the calculator only ever renders the non-active variants.
@@ -180,13 +182,21 @@ async function lookupCode(rawInput: string): Promise<LookupResult> {
 export default async function CalculatorPage({
   searchParams,
 }: {
-  searchParams: Promise<{ code?: string; country?: string; date?: string; customs_value?: string }>;
+  searchParams: Promise<{
+    code?: string;
+    country?: string;
+    date?: string;
+    customs_value?: string;
+    // Set by /api/confirm when it redirects here after a confirmation click.
+    confirm?: string;
+  }>;
 }) {
   const params = await searchParams;
   const codeInput = (params?.code ?? "").trim();
   const countryInput = (params?.country ?? "").trim();
   const dateInput = (params?.date ?? "").trim();
   const valueInput = (params?.customs_value ?? "").trim();
+  const confirmStatus = (params?.confirm ?? "").trim();
   const hasQuery = codeInput !== "";
 
   const date = DATE_RE.test(dateInput) ? dateInput : todayISO();
@@ -210,11 +220,22 @@ export default async function CalculatorPage({
     }
   }
 
+  // Gate status for the Yale per-authority breakdown (Decision 1b/1c: the
+  // headline rate is free, the decomposition is the gated good). Resolved only
+  // when that panel is actually going to render, so an empty calculator page
+  // costs no extra query. This page is already dynamic -- it reads
+  // searchParams -- so reading a cookie here forfeits no caching.
+  const unlock: UnlockStatus = canEffective
+    ? await getUnlockStatus()
+    : { verified: false, awaitingConfirmation: false, error: false };
+
   return (
     <MainContent
       title="Tariff Rate Calculator"
       subtitle="Look up the effective tariff rate for a Harmonized Tariff Schedule code — the base rate plus every applicable program (Section 232, 301, IEEPA, and others) — for a given country of origin and date."
     >
+      <ConfirmBanner status={confirmStatus} />
+
       {/* Search form */}
       <section className="border border-border bg-bg mb-5">
         <header className="px-4 py-3 border-b border-border">
@@ -277,6 +298,7 @@ export default async function CalculatorPage({
           countryInput={countryInput}
           date={date}
           customsValue={customsValue}
+          unlock={unlock}
         />
       )}
 
@@ -286,9 +308,59 @@ export default async function CalculatorPage({
   );
 }
 
+// ===================== Confirmation landing banner =====================
+// /api/confirm redirects to /calculator?confirm=ok|invalid|error. It lands on
+// a bare calculator with no code or country, so without this the person who
+// just clicked the confirmation link sees an empty form and no acknowledgement
+// that anything happened.
+function ConfirmBanner({ status }: { status: string }) {
+  if (status !== "ok" && status !== "invalid" && status !== "error") return null;
+
+  if (status === "ok") {
+    return (
+      <div className="unlock-banner unlock-banner-ok" role="status">
+        <span>
+          <span className="unlock-banner-title">Email confirmed</span>
+          <span className="unlock-banner-body">
+            The per-authority rate breakdown is unlocked on this browser. Look up a code below
+            to see it.
+          </span>
+        </span>
+      </div>
+    );
+  }
+
+  if (status === "invalid") {
+    return (
+      <div className="unlock-banner unlock-banner-warn" role="alert">
+        <span>
+          <span className="unlock-banner-title">That link didn&apos;t work</span>
+          <span className="unlock-banner-body">
+            It was either already used or replaced by a newer one &mdash; requesting a new link
+            retires the previous one. Open the most recent email we sent you. If you no longer
+            have it, look up any code below and use the panel that appears to request a fresh
+            link.
+          </span>
+        </span>
+      </div>
+    );
+  }
+
+  return (
+    <div className="unlock-banner unlock-banner-warn" role="alert">
+      <span>
+        <span className="unlock-banner-title">Something went wrong</span>
+        <span className="unlock-banner-body">
+          We couldn&apos;t confirm your address just then. Try the link again in a moment.
+        </span>
+      </span>
+    </div>
+  );
+}
+
 // ===================== Effective rate section =====================
 function EffectiveRate({
-  effective, effectiveError, canEffective, plainDigits, countryInput, date, customsValue,
+  effective, effectiveError, canEffective, plainDigits, countryInput, date, customsValue, unlock,
 }: {
   effective: RateLookup | null;
   effectiveError: boolean;
@@ -297,6 +369,7 @@ function EffectiveRate({
   countryInput: string;
   date: string;
   customsValue: number;
+  unlock: UnlockStatus;
 }) {
   const wrap = (children: React.ReactNode) => (
     <section className="border border-border bg-bg mb-5">
@@ -339,10 +412,16 @@ function EffectiveRate({
   const num = (k: string): number => Number(r[k] ?? 0);
   const totalRate = num("total_rate");
   const baseRate = num("base_rate");
-  const baseType = String(r.base_rate_type);
   const validFrom = String(r.valid_from).slice(0, 10);
   const validUntil = String(r.valid_until).slice(0, 10);
-  const usmca = r.usmca_eligible === true;
+  // NOTE: do NOT reinstate a "USMCA-eligible" badge from r.usmca_eligible.
+  // Verified 2026-10-19: that flag is a property of the TARIFF LINE, not of the
+  // country. The panel row is matched strictly on country, and the same code
+  // returns usmca_eligible = true for Germany and for China -- neither of which
+  // is in USMCA. Rendered next to the country name it told readers something
+  // false. Removed rather than relabelled, because what the field actually
+  // means in Yale's schema has not been confirmed. Confirm that first, then
+  // decide whether a correct version belongs here.
   const specific = effective.flags?.specificOrCompound === true;
   const notYet = effective.flags?.notYetEffective === true;
 
@@ -378,7 +457,6 @@ function EffectiveRate({
 
       <p className="text-[11px] text-fg-muted mt-1 mb-1">
         In effect {validFrom} → {validUntil} · revision {String(r.revision)} · vintage {effective.vintage}
-        {usmca && " · USMCA-eligible"}
       </p>
       {date > todayISO() && (
         <p className="text-[11px] text-fg-muted mb-3">
@@ -386,25 +464,42 @@ function EffectiveRate({
         </p>
       )}
 
-      {/* Per-authority stack */}
+      {/* Per-authority stack — THE GATED GOOD (Decision 1c). The headline rate
+          above stays free; this decomposition exists nowhere else on the site
+          or in public, which is why it is what the gate protects. The MFN /
+          Special / Column 2 block further down stays free because it is
+          already published elsewhere on the site, and the Cite button stays
+          free as a site-wide credibility signal. */}
       <div className="border-t border-border pt-3">
         <div className="text-[11px] text-fg-muted uppercase tracking-[0.06em] font-semibold mb-2">Breakdown</div>
-        <ul className="m-0 p-0 list-none text-[13px]">
-          <li className="flex justify-between py-0.5">
-            <span>Base rate (MFN){specific ? " — specific/compound" : ""}</span>
-            <span className="tabular-nums">{formatPct(baseRate)}</span>
-          </li>
-          {components.map((c, i) => (
-            <li key={i} className="flex justify-between py-0.5">
-              <span>{c.label}</span>
-              <span className="tabular-nums">+{formatPct(c.value)}</span>
+        {unlock.error ? (
+          <p className="m-0 text-[13px] text-fg-muted">
+            The per-authority breakdown is temporarily unavailable. The total effective rate above
+            still applies.
+          </p>
+        ) : unlock.verified ? (
+          <ul className="m-0 p-0 list-none text-[13px]">
+            <li className="flex justify-between py-0.5">
+              <span>Base rate (MFN){specific ? " — specific/compound" : ""}</span>
+              <span className="tabular-nums">{formatPct(baseRate)}</span>
             </li>
-          ))}
-          <li className="flex justify-between py-1 mt-1 border-t border-border font-semibold">
-            <span>Total effective</span>
-            <span className="tabular-nums">{formatPct(totalRate)}</span>
-          </li>
-        </ul>
+            {components.map((c, i) => (
+              <li key={i} className="flex justify-between py-0.5">
+                <span>{c.label}</span>
+                <span className="tabular-nums">+{formatPct(c.value)}</span>
+              </li>
+            ))}
+            <li className="flex justify-between py-1 mt-1 border-t border-border font-semibold">
+              <span>Total effective</span>
+              <span className="tabular-nums">{formatPct(totalRate)}</span>
+            </li>
+          </ul>
+        ) : (
+          <UnlockGate
+            label="per-authority rate breakdown"
+            awaitingConfirmation={unlock.awaitingConfirmation}
+          />
+        )}
       </div>
 
       {/* Duty dollars */}

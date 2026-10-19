@@ -12,21 +12,40 @@
 //
 // The `server-only` import below turns that mistake into a BUILD failure
 // rather than a silent production leak.
+//
+// WHY THIS IS A FUNCTION AND NOT A MODULE-LEVEL CONST:
+// it used to construct the client (and throw on missing env vars) at import
+// time. That was fine while only API routes imported it -- a missing key meant
+// a 500 on a route nobody had called yet. But app/calculator/page.tsx now
+// imports it indirectly via ./unlock-status, and an import-time throw there
+// takes down the WHOLE calculator page over one env var that only gates a
+// single panel. Constructing on first use keeps the failure contained: the
+// caller catches it and degrades that panel. The throw is NOT softened -- it
+// still fires, still names the missing variable, and still reaches Sentry
+// through console logging, so a misconfigured deploy is not silent.
 
 import "server-only";
-import { createClient } from "@supabase/supabase-js";
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+let cached: SupabaseClient | null = null;
 
-if (!supabaseUrl || !serviceRoleKey) {
-  throw new Error(
-    "Missing Supabase admin env vars. Check NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY in .env.local (local) and Vercel project settings (prod/preview). SUPABASE_SERVICE_ROLE_KEY must NOT carry a NEXT_PUBLIC_ prefix.",
-  );
+export function getSupabaseAdmin(): SupabaseClient {
+  if (cached) return cached;
+
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  if (!supabaseUrl || !serviceRoleKey) {
+    throw new Error(
+      "Missing Supabase admin env vars. Check NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY in .env.local (local) and Vercel project settings (prod/preview). SUPABASE_SERVICE_ROLE_KEY must NOT carry a NEXT_PUBLIC_ prefix.",
+    );
+  }
+
+  // No session persistence or token refresh: this client is used from
+  // stateless route handlers and server components, never on behalf of an
+  // end user.
+  cached = createClient(supabaseUrl, serviceRoleKey, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
+  return cached;
 }
-
-// No session persistence or token refresh: this client is used from stateless
-// route handlers, never on behalf of an end user.
-export const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey, {
-  auth: { persistSession: false, autoRefreshToken: false },
-});

@@ -12,7 +12,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { createHash } from "node:crypto";
-import { supabaseAdmin } from "../../lib/supabaseAdmin";
+import { getSupabaseAdmin } from "../../lib/supabaseAdmin";
 import { COOKIE_NAME, COOKIE_MAX_AGE } from "../../lib/unlock-config";
 
 export const runtime = "nodejs";
@@ -32,7 +32,7 @@ export async function GET(req: NextRequest) {
 
   const tokenHash = createHash("sha256").update(token).digest("hex");
 
-  const { data: row, error } = await supabaseAdmin
+  const { data: row, error } = await getSupabaseAdmin()
     .from("lead_capture")
     .select("email, unlock_token, verified")
     .eq("confirm_token_hash", tokenHash)
@@ -46,7 +46,7 @@ export async function GET(req: NextRequest) {
   }
 
   const now = new Date().toISOString();
-  const { error: updateError } = await supabaseAdmin
+  const { error: updateError } = await getSupabaseAdmin()
     .from("lead_capture")
     .update({
       verified: true,

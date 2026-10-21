@@ -7,15 +7,25 @@ Logic:
        - normal run -> from (system_state.dts_last_record_date + 1 day) to today
        - first run  -> from HISTORICAL_BASELINE (2025-01-01) to today
        - --backfill -> from HISTORICAL_BASELINE to today (ignore stored state)
-  2. Page through the Fiscal Data API filtered to `transaction_type=Deposits`
-     for the date range. Only ask for the fields we actually use.
-  3. Python-side filter to records whose `transaction_catg` is a known
-     customs line. We accept multiple labels because Treasury renamed the
-     line in November 2025 (see CUSTOMS_CATEGORIES). The label has commas
-     in it, which would also confuse the API's filter syntax — client-side
-     filter avoids that.
-  4. Upsert mapped rows to dts_daily. Update system_state.dts_last_record_date
-     to the maximum record_date we wrote.
+  2. Page through the Fiscal Data API for the date range, BOTH transaction
+     types. Only ask for the fields we actually use.
+  3. Python-side filter to two known categories: the customs DEPOSITS line
+     and the CBP WITHDRAWALS line. We accept multiple labels for the deposits
+     line because Treasury renamed it in November 2025 (see
+     CUSTOMS_CATEGORIES). Both labels contain characters ("," and "&") that
+     confuse the API's filter syntax — client-side filtering avoids that.
+  4. Merge the two sides into one row per record_date and upsert to dts_daily.
+     Update system_state.dts_last_record_date to the max record_date written.
+
+WHY BOTH SIDES (added 2026-10-21):
+  Storing deposits alone was fine while customs refunds were under 5% of
+  receipts. The IEEPA refund wave broke that: in June 2026 deposits alone
+  said +$24.8B when the true net was -$25.6B. Deposits minus the CBP
+  withdrawals line tracks the authoritative MTS net figure within a few
+  percent. See scripts/dts_cbp_withdrawals.sql for the measured comparison
+  and the caveat that the CBP line is a PROXY -- it also carries roughly
+  $1-2B/month of CBP operating spending, and Treasury publishes no
+  customs-refund line of its own.
 
 Run from the project root:
     python -m scripts.fetch_dts            # incremental
@@ -51,6 +61,15 @@ CUSTOMS_CATEGORIES = {
     "DHS - Customs Duties, Taxes, and Fees",
 }
 
+# The withdrawals-side counterpart. This is the only DTS category that
+# plausibly carries customs refunds -- Treasury publishes no customs-refund
+# line -- but it also includes CBP's own operating spending. Treated as a
+# proxy, never as an exact refund figure. If Treasury renames it, the WARNING
+# in filter_known() fires.
+CBP_WITHDRAWAL_CATEGORIES = {
+    "DHS - Customs & Border Protection (CBP)",
+}
+
 PAGE_SIZE = 10000  # Treasury API maximum
 DTS_FETCH_TIMEOUT = 90
 STATE_KEY = "dts_last_record_date"
@@ -59,15 +78,14 @@ STATE_KEY = "dts_last_record_date"
 # ===================== Fetch =====================
 
 def fetch_dts_page(start_date: date, end_date: date, page_number: int) -> dict:
-    """Fetch one page of DTS Deposits records for a date range."""
+    """Fetch one page of DTS records (both transaction types) for a date range."""
     params = {
         "filter": (
-            f"transaction_type:eq:Deposits,"
             f"record_date:gte:{start_date.isoformat()},"
             f"record_date:lte:{end_date.isoformat()}"
         ),
         "fields": (
-            "record_date,transaction_catg,transaction_today_amt,"
+            "record_date,transaction_type,transaction_catg,transaction_today_amt,"
             "transaction_mtd_amt,transaction_fytd_amt"
         ),
         "sort": "record_date",
@@ -80,7 +98,7 @@ def fetch_dts_page(start_date: date, end_date: date, page_number: int) -> dict:
 
 
 def fetch_all_dts_records(start_date: date, end_date: date) -> list[dict]:
-    """Fetch all DTS Deposits records across the date range, paging as needed."""
+    """Fetch all DTS records across the date range, paging as needed."""
     all_records: list[dict] = []
     page = 1
     while True:
@@ -99,32 +117,55 @@ def fetch_all_dts_records(start_date: date, end_date: date) -> list[dict]:
 
 # ===================== Filter & map =====================
 
-def filter_customs(records: list[dict]) -> list[dict]:
-    """Keep only records whose transaction_catg is a known customs line.
+def filter_known(records: list[dict]) -> tuple[dict[str, dict], dict[str, dict]]:
+    """Split records into the customs deposits line and the CBP withdrawals line.
 
-    Also warns if a record looks customs-related (mentions 'customs' or
-    'duties' in its label) but isn't in our known set — that means Treasury
-    renamed the line again and we need to update CUSTOMS_CATEGORIES.
+    Returns two dicts keyed by record_date. Warns if a record looks like it
+    belongs to either line but carries an unrecognised label -- that means
+    Treasury renamed something and the constants above need updating.
     """
-    matched = []
-    unknown_customs_labels: set[str] = set()
+    deposits: dict[str, dict] = {}
+    withdrawals: dict[str, dict] = {}
+    unknown_customs: set[str] = set()
+    unknown_cbp: set[str] = set()
+
     for r in records:
         catg = r.get("transaction_catg") or ""
-        if catg in CUSTOMS_CATEGORIES:
-            matched.append(r)
+        ttype = r.get("transaction_type") or ""
+        rec_date = r.get("record_date")
+        if not rec_date:
             continue
         low = catg.lower()
-        if "customs" in low or "duties" in low:
-            unknown_customs_labels.add(catg)
-    if unknown_customs_labels:
+
+        if ttype == "Deposits":
+            if catg in CUSTOMS_CATEGORIES:
+                deposits[rec_date] = r
+            elif "customs" in low or "duties" in low:
+                unknown_customs.add(catg)
+        elif ttype == "Withdrawals":
+            if catg in CBP_WITHDRAWAL_CATEGORIES:
+                withdrawals[rec_date] = r
+            elif "customs" in low or "border protection" in low:
+                unknown_cbp.add(catg)
+
+    if unknown_customs:
         print(
-            "  WARNING: found customs/duty-related categories NOT in "
+            "  WARNING: customs/duty-related DEPOSIT categories NOT in "
             "CUSTOMS_CATEGORIES — Treasury may have renamed the line. "
             "Update the constant in fetch_dts.py:"
         )
-        for label in sorted(unknown_customs_labels):
+        for label in sorted(unknown_customs):
             print(f"    - {label!r}")
-    return matched
+    if unknown_cbp:
+        print(
+            "  WARNING: customs/CBP-related WITHDRAWAL categories NOT in "
+            "CBP_WITHDRAWAL_CATEGORIES — Treasury may have renamed the line. "
+            "Update the constant in fetch_dts.py:"
+        )
+        for label in sorted(unknown_cbp):
+            print(f"    - {label!r}")
+
+    return deposits, withdrawals
 
 
 def parse_amount(s: str | None) -> float | None:
@@ -137,15 +178,32 @@ def parse_amount(s: str | None) -> float | None:
         return None
 
 
-def map_record(r: dict) -> dict:
-    """Map a DTS record to a dts_daily row."""
-    return {
-        "record_date": r["record_date"],
-        "customs_revenue_today": parse_amount(r.get("transaction_today_amt")),
-        "customs_revenue_mtd": parse_amount(r.get("transaction_mtd_amt")),
-        "raw_data": r,
-        # source_url left NULL — Treasury PDF URL pattern unstable.
-    }
+def build_rows(
+    deposits: dict[str, dict], withdrawals: dict[str, dict]
+) -> list[dict]:
+    """Merge the two sides into one dts_daily row per record_date.
+
+    A date present on one side but not the other still produces a row; the
+    missing side stays NULL rather than 0, so "Treasury published nothing"
+    is distinguishable from "Treasury published a zero". In practice both
+    lines appear on every business day.
+    """
+    rows = []
+    for rec_date in sorted(set(deposits) | set(withdrawals)):
+        dep = deposits.get(rec_date)
+        wdr = withdrawals.get(rec_date)
+        rows.append(
+            {
+                "record_date": rec_date,
+                "customs_revenue_today": parse_amount(dep.get("transaction_today_amt")) if dep else None,
+                "customs_revenue_mtd": parse_amount(dep.get("transaction_mtd_amt")) if dep else None,
+                "cbp_withdrawals_today": parse_amount(wdr.get("transaction_today_amt")) if wdr else None,
+                "cbp_withdrawals_mtd": parse_amount(wdr.get("transaction_mtd_amt")) if wdr else None,
+                "raw_data": {"deposits": dep, "withdrawals": wdr},
+                # source_url left NULL — Treasury PDF URL pattern unstable.
+            }
+        )
+    return rows
 
 
 # ===================== Main =====================
@@ -176,22 +234,23 @@ def main(argv: list[str]) -> int:
         return 0
 
     # 2. Fetch
-    print(f"Fetching DTS Deposits records from {start_date} to {today} ...")
+    print(f"Fetching DTS records from {start_date} to {today} ...")
     raw_records = fetch_all_dts_records(start_date, today)
 
-    # 3. Filter to customs
-    customs_records = filter_customs(raw_records)
+    # 3. Split into the two lines we care about
+    deposits, withdrawals = filter_known(raw_records)
     print(
-        f"Filtered to {len(customs_records):,} customs records "
-        f"(out of {len(raw_records):,})."
+        f"Matched {len(deposits):,} customs deposit day(s) and "
+        f"{len(withdrawals):,} CBP withdrawal day(s) "
+        f"(out of {len(raw_records):,} records)."
     )
 
-    if not customs_records:
+    if not deposits and not withdrawals:
         print("No new customs data to write. Exiting.")
         return 0
 
-    # 4. Map
-    mapped = [map_record(r) for r in customs_records]
+    # 4. Merge into one row per date
+    mapped = build_rows(deposits, withdrawals)
     max_date = max(m["record_date"] for m in mapped)
 
     # 5. Upsert (or print sample on dry run)

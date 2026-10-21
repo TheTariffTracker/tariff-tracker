@@ -63,7 +63,7 @@ async function getCounterData(): Promise<CounterData | null> {
 
   const { data: dtsRows, error: dtsError } = await supabase
     .from("dts_daily")
-    .select("record_date, customs_revenue_today")
+    .select("record_date, customs_revenue_today, cbp_withdrawals_today")
     .gte("record_date", cutoffDate);
 
   let dtsProvisionalDollars: number | null = null;
@@ -73,8 +73,18 @@ async function getCounterData(): Promise<CounterData | null> {
   } else {
     const rows = dtsRows ?? [];
     // DTS amounts are in MILLIONS of dollars. Convert to dollars.
+    //
+    // NET, not gross. customs_revenue_today is the deposits side only;
+    // cbp_withdrawals_today is how tariff refunds surface in the daily data.
+    // Using deposits alone was off by ~$50B with the sign inverted in June
+    // 2026, when IEEPA refunds exceeded collections. Do not "simplify" this
+    // back to a single column -- see scripts/dts_cbp_withdrawals.sql for the
+    // measured comparison against the authoritative MTS figures.
     const dtsMillions = rows.reduce(
-      (sum, r) => sum + Number(r.customs_revenue_today ?? 0),
+      (sum, r) =>
+        sum +
+        Number(r.customs_revenue_today ?? 0) -
+        Number(r.cbp_withdrawals_today ?? 0),
       0,
     );
     dtsProvisionalDollars = dtsMillions * 1_000_000;
@@ -110,9 +120,16 @@ function formatCentAccurateDollars(amount: number): string {
   }).format(amount);
 }
 
-function formatBillions(amount: number): string {
-  const billions = amount / 1_000_000_000;
-  return `$${billions.toFixed(1)}B`;
+// Signed, and falls back to millions below $1B so a near-zero net month
+// prints "+$11M" rather than a meaningless "+$0.0B". Uses a true minus sign
+// (U+2212) rather than a hyphen so the negative reads clearly at this size.
+function formatSignedCompact(amount: number): string {
+  const sign = amount < 0 ? "\u2212" : "+";
+  const abs = Math.abs(amount);
+  if (abs < 1_000_000_000) {
+    return `${sign}$${(abs / 1_000_000).toFixed(0)}M`;
+  }
+  return `${sign}$${(abs / 1_000_000_000).toFixed(1)}B`;
 }
 
 // "Sep 1 - Oct 15, 2026" from two ISO dates. The start date carries its year
@@ -144,8 +161,10 @@ export default async function CounterStrip() {
     );
   }
 
-  const showProvisional =
-    data.dtsProvisionalDollars !== null && data.dtsProvisionalDollars > 0;
+  // Deliberately NOT "> 0". The net provisional figure goes negative in a
+  // month where refunds exceed collections, which is exactly when it is most
+  // worth showing; the old positive-only guard would have hidden it.
+  const showProvisional = data.dtsProvisionalDollars !== null;
 
   return (
     <section className="counter-strip" aria-label="Live total tariff revenue">
@@ -163,14 +182,14 @@ export default async function CounterStrip() {
         </div>
         {showProvisional && (
           <div className="counter-provisional">
-            +{formatBillions(data.dtsProvisionalDollars!)}
+            {formatSignedCompact(data.dtsProvisionalDollars!)}
             {data.provisionalRangeLabel
               ? ` · ${data.provisionalRangeLabel}`
               : ""}{" "}
-            (provisional · all customs receipts)
+            (provisional · net of refunds)
             <InfoIcon
               variant="counter"
-              tooltip="From the Daily Treasury Statement. Bundles Customs Duties with Merchandise Processing Fee and Harbor Maintenance Tax, so this figure is slightly broader than the MTS number above. Updates each business day."
+              tooltip="From the Daily Treasury Statement: customs deposits minus Customs and Border Protection withdrawals, which is how tariff refunds appear in the daily data. Treasury publishes no customs-refund line, so the withdrawals side also carries roughly $1-2B a month of CBP operating costs, making this a close proxy rather than an exact figure. It also bundles Customs Duties with Merchandise Processing Fee and Harbor Maintenance Tax. The monthly figure above is the authoritative one. Updates each business day."
               ariaLabel="Source info"
             />
           </div>

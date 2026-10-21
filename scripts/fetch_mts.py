@@ -135,6 +135,13 @@ def map_record(r: dict) -> dict:
         "year": parse_int(r.get("record_calendar_year")),
         "month": parse_int(r.get("record_calendar_month")),
         "customs_duties": parse_amount(r.get("current_month_net_rcpt_amt")),
+        # Gross and refunds alongside the net figure. customs_duties is NET
+        # (gross minus refunds); storing the components lets the site disclose
+        # the refund scale instead of hiding it inside one number. Backfilled
+        # for existing months by scripts/mts_gross_refunds.sql, straight out
+        # of raw_data -- these keys have always been present there.
+        "customs_gross": parse_amount(r.get("current_month_gross_rcpt_amt")),
+        "customs_refunds": parse_amount(r.get("current_month_refund_amt")),
         "fiscal_year": r.get("record_fiscal_year"),
         "published_date": r.get("record_date"),
         "raw_data": r,

@@ -181,15 +181,6 @@ body {
   letter-spacing: -0.01em;
 }
 
-.counter-provisional {
-  font-size: 15px;
-  color: var(--color-bill-text-muted);
-  margin-top: 4px;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-variant-numeric: tabular-nums;
-}
 
 /* Info icon — 14px circle wrapping an italic "i" letter. Circle is drawn
    with `box-shadow: inset` (which Tailwind's preflight doesn't reset) instead
@@ -235,7 +226,6 @@ body {
 @media (max-width: 700px) {
   .counter-big { font-size: 28px; }
   .counter-label { font-size: 11px; }
-  .counter-provisional { font-size: 13px; }
 }
 @media (max-width: 480px) {
   .counter-big { font-size: 22px; letter-spacing: -0.02em; }
@@ -902,4 +892,78 @@ a.stat-fr-title:focus {
 }
 .unlock-banner-body {
   color: var(--color-fg-muted);
+}
+
+/* ---------- Counter sub-figures (Phase: refund disclosure) ----------
+   One centered row under the hero carrying the decomposition (gross,
+   refunded) plus the provisional since-the-last-settled-month figure.
+   Dividers are uniform by design — an earlier draft weighted the last one
+   more heavily to mark it as a different kind of number; that was rejected
+   in favour of three evenly separated cells. */
+.counter-subrow {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  margin-top: 10px;
+  font-variant-numeric: tabular-nums;
+}
+.counter-cell {
+  padding: 0 26px;
+}
+.counter-cell + .counter-cell {
+  border-left: 1px solid rgba(93, 77, 58, 0.45);
+}
+.counter-cell-k {
+  display: block;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--color-bill-brown);
+  margin-bottom: 1px;
+}
+.counter-cell-v {
+  /* inline-flex + gap so a trailing info icon has breathing room instead of
+     colliding with the last digit. */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--color-bill-brown);
+  line-height: 1.25;
+}
+.counter-cell-neg .counter-cell-v {
+  color: var(--color-red);
+}
+@media (max-width: 700px) {
+  .counter-cell {
+    padding: 0 14px;
+  }
+  .counter-cell-v {
+    font-size: 15px;
+  }
+}
+
+/* At phone width three cells cannot sit side by side. Stack them and move the
+   rule to the top edge -- left borders on wrapped flex items leave rules
+   dangling in mid-air. */
+@media (max-width: 480px) {
+  .counter-subrow {
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+  }
+  .counter-cell {
+    padding: 0;
+  }
+  .counter-cell + .counter-cell {
+    border-left: 0;
+    border-top: 1px solid rgba(93, 77, 58, 0.45);
+    padding-top: 8px;
+    width: 100%;
+    max-width: 220px;
+  }
 }

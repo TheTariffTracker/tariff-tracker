@@ -24,6 +24,9 @@ type CounterData = {
   latestMonthLabel: string;
   dtsProvisionalDollars: number | null;
   provisionalRangeLabel: string | null;
+  provisionalSinceLabel: string | null;
+  mtsGrossDollars: number;
+  mtsRefundsDollars: number;
 };
 
 async function getCounterData(): Promise<CounterData | null> {
@@ -31,7 +34,7 @@ async function getCounterData(): Promise<CounterData | null> {
   // Pull every monthly row (~15 rows today, max ~12/year) and sum client-side.
   const { data: mtsRows, error: mtsError } = await supabase
     .from("mts_monthly")
-    .select("year, month, customs_duties")
+    .select("year, month, customs_duties, customs_gross, customs_refunds")
     .order("year", { ascending: false })
     .order("month", { ascending: false });
 
@@ -45,6 +48,17 @@ async function getCounterData(): Promise<CounterData | null> {
 
   const mtsTotalDollars = mtsRows.reduce(
     (sum, r) => sum + Number(r.customs_duties ?? 0),
+    0,
+  );
+  // Components of the headline. customs_duties is net; these two are what it
+  // is made of. Shown because refunds have run ~30% of gross since the IEEPA
+  // ruling, which a single net figure hides completely.
+  const mtsGrossDollars = mtsRows.reduce(
+    (sum, r) => sum + Number(r.customs_gross ?? 0),
+    0,
+  );
+  const mtsRefundsDollars = mtsRows.reduce(
+    (sum, r) => sum + Number(r.customs_refunds ?? 0),
     0,
   );
 
@@ -68,6 +82,7 @@ async function getCounterData(): Promise<CounterData | null> {
 
   let dtsProvisionalDollars: number | null = null;
   let provisionalRangeLabel: string | null = null;
+  let provisionalSinceLabel: string | null = null;
   if (dtsError) {
     console.error("CounterStrip: dts_daily fetch error", dtsError);
   } else {
@@ -100,6 +115,7 @@ async function getCounterData(): Promise<CounterData | null> {
     );
     if (maxDate) {
       provisionalRangeLabel = formatRange(cutoffDate, maxDate);
+      provisionalSinceLabel = formatSince(cutoffDate);
     }
   }
 
@@ -108,7 +124,18 @@ async function getCounterData(): Promise<CounterData | null> {
     latestMonthLabel,
     dtsProvisionalDollars,
     provisionalRangeLabel,
+    provisionalSinceLabel,
+    mtsGrossDollars,
+    mtsRefundsDollars,
   };
+}
+
+// "Since Oct 1" from an ISO date. The full range stays available for the
+// tooltip; this short form keeps the three counter cells roughly even in
+// width, which spelling out "Provisional · Oct 1 - Oct 19, 2026" did not.
+function formatSince(startIso: string): string {
+  const d = new Date(startIso + "T00:00:00Z");
+  return `Since ${MONTH_NAMES[d.getUTCMonth()].slice(0, 3)} ${d.getUTCDate()}`;
 }
 
 function formatCentAccurateDollars(amount: number): string {
@@ -118,6 +145,16 @@ function formatCentAccurateDollars(amount: number): string {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   }).format(amount);
+}
+
+// Unsigned compact dollars for the decomposition cells, which always carry
+// their own sign via the label ("Refunded") and colour.
+function formatCompact(amount: number): string {
+  const abs = Math.abs(amount);
+  if (abs < 1_000_000_000) {
+    return `$${(abs / 1_000_000).toFixed(0)}M`;
+  }
+  return `$${(abs / 1_000_000_000).toFixed(1)}B`;
 }
 
 // Signed, and falls back to millions below $1B so a near-zero net month
@@ -170,7 +207,7 @@ export default async function CounterStrip() {
     <section className="counter-strip" aria-label="Live total tariff revenue">
       <div className="counter-strip-inner">
         <div className="counter-label">
-          Total Tariff Revenue · Jan 2025 – {data.latestMonthLabel}
+          Net Tariff Revenue · Jan 2025 – {data.latestMonthLabel}
           <InfoIcon
             variant="counter"
             tooltip="Cent-accurate cumulative figure from the U.S. Treasury's Monthly Treasury Statement (Table 4, Customs Duties line). Reflects net receipts after refunds and drawbacks."
@@ -180,20 +217,38 @@ export default async function CounterStrip() {
         <div className="counter-big">
           {formatCentAccurateDollars(data.mtsTotalDollars)}
         </div>
-        {showProvisional && (
-          <div className="counter-provisional">
-            {formatSignedCompact(data.dtsProvisionalDollars!)}
-            {data.provisionalRangeLabel
-              ? ` · ${data.provisionalRangeLabel}`
-              : ""}{" "}
-            (provisional · net of refunds)
-            <InfoIcon
-              variant="counter"
-              tooltip="From the Daily Treasury Statement: customs deposits minus Customs and Border Protection withdrawals, which is how tariff refunds appear in the daily data. Treasury publishes no customs-refund line, so the withdrawals side also carries roughly $1-2B a month of CBP operating costs, making this a close proxy rather than an exact figure. It also bundles Customs Duties with Merchandise Processing Fee and Harbor Maintenance Tax. The monthly figure above is the authoritative one. Updates each business day."
-              ariaLabel="Source info"
-            />
-          </div>
-        )}
+        <div className="counter-subrow">
+          <span className="counter-cell">
+            <span className="counter-cell-k">Gross collected</span>
+            <span className="counter-cell-v">
+              {formatCompact(data.mtsGrossDollars)}
+            </span>
+          </span>
+          <span className="counter-cell counter-cell-neg">
+            <span className="counter-cell-k">Refunded</span>
+            <span className="counter-cell-v">
+              {"\u2212"}
+              {formatCompact(data.mtsRefundsDollars)}
+            </span>
+          </span>
+          {showProvisional && (
+            <span className="counter-cell">
+              <span className="counter-cell-k">
+                {data.provisionalSinceLabel
+                  ? `${data.provisionalSinceLabel} · prov.`
+                  : "Provisional"}
+              </span>
+              <span className="counter-cell-v">
+                {formatSignedCompact(data.dtsProvisionalDollars!)}
+                <InfoIcon
+                  variant="counter"
+                  tooltip={`Provisional total for ${data.provisionalRangeLabel ?? "the days since the last settled month"}, from the Daily Treasury Statement: customs deposits minus Customs and Border Protection withdrawals, which is how tariff refunds appear in the daily data. Treasury publishes no customs-refund line, so the withdrawals side also carries roughly $1-2B a month of CBP operating costs, making this a close proxy rather than an exact figure. It also bundles Customs Duties with Merchandise Processing Fee and Harbor Maintenance Tax. The monthly figures to the left are the authoritative ones. Updates each business day.`}
+                  ariaLabel="Source info"
+                />
+              </span>
+            </span>
+          )}
+        </div>
         <div className="counter-cite">
           <CiteButton
             variant="counter"

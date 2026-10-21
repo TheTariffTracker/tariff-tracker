@@ -1,15 +1,22 @@
 name: MTS twice-monthly sync
 
-# Monthly Treasury Statement: published once a month, ~3-4 weeks after
-# month end. Running on the 1st and 15th catches both the typical
-# publication window and any retroactive revisions.
+# Monthly Treasury Statement: a normal month publishes around the 8th
+# business day of the following month. Running on the 1st, 15th and 23rd
+# catches the typical publication window, the late fiscal-year-end release,
+# and any retroactive revisions.
 
 on:
   schedule:
     # 13:41 UTC on the 1st and 15th of each month ≈ 8:40-ish AM ET. Off-hour
     # minute (not 0) avoids the GitHub Actions top-of-hour scheduling delay —
     # see dts-weekday.yml.
-    - cron: '41 13 1,15 * *'
+    # Added 2026-10-21: the 23rd. September's MTS is the fiscal-year-end
+    # "Final" statement and publishes LATER than a normal month — in 2026 it
+    # landed between the 15th and the 21st, so the 15th run missed it and the
+    # next run was Nov 1. The site showed August data for weeks. The 23rd
+    # closes that gap with margin, including for the multi-hour scheduling
+    # drift Actions can add.
+    - cron: '41 13 1,15,23 * *'
   workflow_dispatch: {}
 
 jobs:

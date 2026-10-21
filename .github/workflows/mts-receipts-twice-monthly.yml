@@ -7,8 +7,8 @@ name: MTS receipts twice-monthly sync
 # Distinct from the existing `mts-twice-monthly.yml` workflow which pulls
 # ONLY the Customs Duties line from Table 4 into mts_monthly. This one
 # pulls all ~57 categories per month into federal_receipts. Same cadence
-# (1st + 15th), 12 minutes apart so the two don't compete for runners in
-# the same scheduler load batch.
+# (1st + 15th + 23rd), 12 minutes apart so the two don't compete for runners
+# in the same scheduler load batch.
 
 on:
   schedule:
@@ -16,7 +16,13 @@ on:
     # Off-hour minute (not 0) avoids the GitHub Actions top-of-hour
     # scheduling delay — see dts-weekday.yml. Minute differs from the
     # existing MTS workflow (13:41) so they spread across the hour.
-    - cron: '53 13 1,15 * *'
+    # Added 2026-10-21: the 23rd. September's MTS is the fiscal-year-end
+    # "Final" statement and publishes LATER than a normal month — in 2026 it
+    # landed between the 15th and the 21st, so the 15th run missed it and the
+    # next run was Nov 1. The site showed August data for weeks. The 23rd
+    # closes that gap with margin, including for the multi-hour scheduling
+    # drift Actions can add.
+    - cron: '53 13 1,15,23 * *'
   workflow_dispatch: {}
 
 jobs:

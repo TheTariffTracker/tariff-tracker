@@ -79,7 +79,11 @@ async function getStatData(): Promise<StatData> {
   const [dtsRecentResp, mtsYearResp, frResp] = await Promise.all([
     supabase
       .from("dts_daily")
-      .select("record_date, customs_revenue_today, customs_revenue_mtd")
+      // NOTE: keep this on one line as a single string literal. supabase-js
+      // infers the row type by parsing this literal; splitting it with "+"
+      // concatenation collapses the inferred type to GenericStringError and
+      // every field access below becomes a type error.
+      .select("record_date, customs_revenue_today, customs_revenue_mtd, cbp_withdrawals_today, cbp_withdrawals_mtd")
       .order("record_date", { ascending: false })
       .limit(250),
     supabase
@@ -132,7 +136,14 @@ async function getStatData(): Promise<StatData> {
     // DTS is stored in millions; convert to dollars for the big number.
     todayDollars = Number(latest.customs_revenue_today ?? 0) * 1_000_000;
     // MTD stays in millions — that's what the card displays directly.
-    mtdMillions = Number(latest.customs_revenue_mtd ?? 0);
+    //
+    // NET of refunds: deposits MTD minus CBP withdrawals MTD. Showing the
+    // deposits side alone put ~$3,870M on this card in October 2026 when the
+    // true net month-to-date figure was $11M. The card is labelled "Revenue",
+    // which reads as net, so gross was the wrong number for it.
+    mtdMillions =
+      Number(latest.customs_revenue_mtd ?? 0) -
+      Number(latest.cbp_withdrawals_mtd ?? 0);
     if (dtsRows.length > 1) {
       priorDayDollars =
         Number(dtsRows[1].customs_revenue_today ?? 0) * 1_000_000;
@@ -158,8 +169,14 @@ async function getStatData(): Promise<StatData> {
       const dtsInRange = dtsRows.filter(
         (r) => r.record_date >= cutoffStr && r.record_date <= yearEndStr,
       );
+      // Net, to match the MTS portion above — mts_monthly.customs_duties is
+      // already net receipts. Adding gross DTS to net MTS mixed two different
+      // measures inside one figure.
       const dtsSumMillions = dtsInRange.reduce(
-        (sum, r) => sum + Number(r.customs_revenue_today ?? 0),
+        (sum, r) =>
+          sum +
+          Number(r.customs_revenue_today ?? 0) -
+          Number(r.cbp_withdrawals_today ?? 0),
         0,
       );
       dtsAddDollars = dtsSumMillions * 1_000_000;
@@ -181,15 +198,19 @@ async function getStatData(): Promise<StatData> {
   };
 }
 
-// "$X,XXXM" given a dollar amount. Rounds to the nearest million.
-function formatMillionsFromDollars(amountDollars: number): string {
-  const millions = amountDollars / 1_000_000;
-  return `$${Math.round(millions).toLocaleString("en-US")}M`;
+// "$X,XXXM" given an amount already in millions. Sign-aware: these figures
+// are net of refunds and go NEGATIVE in a month where refunds exceed
+// collections (June 2026: -$25.6B). A naive template puts the minus inside
+// the currency as "$-25,556M"; this keeps it outside, with a true minus sign.
+function formatMillions(amountMillions: number): string {
+  const rounded = Math.round(amountMillions);
+  const sign = rounded < 0 ? "\u2212" : "";
+  return `${sign}$${Math.abs(rounded).toLocaleString("en-US")}M`;
 }
 
-// "$X,XXXM" given an amount already in millions.
-function formatMillions(amountMillions: number): string {
-  return `$${Math.round(amountMillions).toLocaleString("en-US")}M`;
+// Same, given a dollar amount.
+function formatMillionsFromDollars(amountDollars: number): string {
+  return formatMillions(amountDollars / 1_000_000);
 }
 
 // "May 10, 2026" from "2026-05-10". Parsed as UTC so the printed day doesn't
@@ -261,7 +282,7 @@ export default async function StatStrip() {
         </div>
         {data.mtdMillions !== null && (
           <CiteButton
-            figureLabel={`Month-to-Date U.S. Customs Receipts, ${currentMonthLabel}`}
+            figureLabel={`Month-to-Date U.S. Customs Revenue, Net of Refunds, ${currentMonthLabel}`}
             value={formatMillions(data.mtdMillions)}
             sourceName={DTS_SOURCE}
             dataThrough={asOf ?? currentMonthLabel}
@@ -281,7 +302,7 @@ export default async function StatStrip() {
         <div className="stat-delta stat-delta-neutral">YTD {now.getFullYear()}</div>
         {data.ytdDollars !== null && (
           <CiteButton
-            figureLabel={`Calendar Year-to-Date U.S. Customs Receipts, ${now.getFullYear()}`}
+            figureLabel={`Calendar Year-to-Date U.S. Customs Revenue, Net of Refunds, ${now.getFullYear()}`}
             value={formatMillionsFromDollars(data.ytdDollars)}
             sourceName={YTD_SOURCE}
             dataThrough={asOf ?? String(now.getFullYear())}

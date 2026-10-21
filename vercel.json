@@ -1,0 +1,8 @@
+{
+  "crons": [
+    {
+      "path": "/api/retry-confirmations",
+      "schedule": "23 8 * * *"
+    }
+  ]
+}

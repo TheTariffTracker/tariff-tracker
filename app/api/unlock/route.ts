@@ -19,8 +19,12 @@
 // protection; endpoints get found.
 
 import { NextRequest, NextResponse } from "next/server";
-import { randomBytes, createHash } from "node:crypto";
 import { getSupabaseAdmin } from "../../lib/supabaseAdmin";
+import {
+  newToken,
+  sendConfirmation,
+  sha256,
+} from "../../lib/confirmation-email";
 import { validateEmail } from "../../lib/email-validation";
 import { rateLimitHit } from "../../lib/rate-limit";
 import {
@@ -40,8 +44,6 @@ export const dynamic = "force-dynamic";
 export const maxDuration = 15;
 
 const MAX_BODY_BYTES = 4096;
-const FROM = "Tariff Tracker <confirm@send.tarifftracker.org>";
-const REPLY_TO = "contact@tarifftracker.org";
 
 /**
  * Client IP as Vercel's edge reports it. x-forwarded-for is a header and so is
@@ -54,63 +56,6 @@ function clientIp(req: NextRequest): string {
   const first = xff?.split(",")[0]?.trim();
   if (first) return first;
   return req.headers.get("x-real-ip")?.trim() || "unknown";
-}
-
-function newToken(): string {
-  return randomBytes(32).toString("base64url");
-}
-
-function sha256(value: string): string {
-  return createHash("sha256").update(value).digest("hex");
-}
-
-/**
- * Best-effort send. Returns true only on a confirmed 2xx.
- *
- * A failure here must NOT fail the request: the row is already captured and
- * the soft unlock already granted. confirm_sent_at stays null, which is the
- * queryable backlog a retry job drains -- important because Resend's free tier
- * caps at 100/day and that cap bites hardest on a traffic-spike day.
- */
-async function sendConfirmation(email: string, token: string): Promise<boolean> {
-  const apiKey = process.env.RESEND_API_KEY;
-  if (!apiKey) {
-    console.error("unlock: RESEND_API_KEY missing");
-    return false;
-  }
-
-  const url = `${SITE_URL}/api/confirm?token=${encodeURIComponent(token)}`;
-  const html = [
-    "<p>Thanks for signing up to Tariff Tracker.</p>",
-    `<p><a href="${url}">Confirm your email address</a> to unlock the full effective-rate breakdown on the rate calculator.</p>`,
-    `<p>If the link doesn't work, paste this into your browser:<br>${url}</p>`,
-    "<p>If you didn't request this, you can ignore this message and nothing further will happen.</p>",
-  ].join("");
-
-  try {
-    const res = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        from: FROM,
-        to: [email],
-        reply_to: REPLY_TO,
-        subject: "Confirm your email - Tariff Tracker",
-        html,
-      }),
-    });
-    if (!res.ok) {
-      console.error("unlock: resend returned", res.status, await res.text());
-      return false;
-    }
-    return true;
-  } catch (e) {
-    console.error("unlock: resend request failed", e);
-    return false;
-  }
 }
 
 export async function POST(req: NextRequest) {

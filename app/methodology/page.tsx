@@ -366,13 +366,40 @@ export default function MethodologyPage() {
 
         <p>
           <strong>Net versus gross customs revenue.</strong> MTS Table 4
-          distinguishes gross receipts from net receipts (net = gross
-          minus refunds and drawbacks). DTS publishes a single daily
-          figure that is closer to gross. When citing &quot;monthly
-          customs revenue&quot; we use the net figure from MTS for
-          completed months because that is the figure that flows into
-          the federal balance sheet; we use the DTS daily total for the
-          current incomplete month as the best provisional approximation.
+          reports gross receipts, refunds, and net receipts separately
+          (net = gross minus refunds and drawbacks). Every revenue figure
+          on this site is <em>net</em>. That distinction used to be minor
+          and is no longer. Across January 2025 to September 2026,
+          refunds total roughly 30% of gross receipts &mdash; but that
+          average flattens what happened. Through April 2026 refunds ran
+          about 4% of gross. From May 2026, after the Supreme Court
+          struck down the IEEPA tariffs and the Court of International
+          Trade ordered reliquidation, refunds <em>exceeded</em>{" "}gross
+          collections: $134 billion refunded against $119 billion
+          collected over those five months, with three of them net
+          negative. Because
+          a single net figure hides this entirely, the Dashboard counter
+          displays gross collected, total refunded, and the net result
+          side by side.
+        </p>
+
+        <p>
+          <strong>How the provisional figure handles refunds.</strong>{" "}
+          The DTS publishes no customs-refund line, so for the days after
+          the most recent completed MTS month we subtract the
+          &quot;DHS - Customs &amp; Border Protection (CBP)&quot;
+          withdrawals category from the customs deposits category. That
+          withdrawals line is where tariff refunds surface in the daily
+          data, but it <em>also</em>{" "}carries roughly $1&ndash;2 billion a
+          month of CBP&apos;s own operating spending, so the result is a
+          close proxy rather than an exact figure. Measured against the
+          authoritative MTS net figure for the same months, it lands
+          within about $0.9 billion. Using the deposits side alone, as we
+          did before October 2026, was wrong by as much as $50 billion
+          with the sign inverted &mdash; in June 2026 deposits alone
+          implied +$24.8 billion when the true net was &minus;$25.6
+          billion. The monthly MTS figure, not the provisional one, is
+          always the authoritative number.
         </p>
 
         <p>
@@ -414,17 +441,25 @@ export default function MethodologyPage() {
 
         <p>
           <strong>Cumulative revenue since January 2025</strong> (shown on
-          the Dashboard counter strip): sum of MTS Table 4 net customs
-          receipts for every completed month from January 2025 through the
-          most recent published MTS month, plus DTS daily customs receipts
-          for every business day in the current incomplete month
-          (multiplied by one million for unit alignment).
+          the Dashboard counter strip): the headline figure is the sum of
+          MTS Table 4 <em>net</em>{" "}customs receipts for every completed
+          month from January 2025 through the most recent published MTS
+          month. The &quot;gross collected&quot; and &quot;refunded&quot;
+          figures beside it are the sums of the corresponding Table 4
+          columns over the same months, and they reconcile exactly: gross
+          minus refunded equals the headline, to the cent, in every month.
+          The provisional figure covers business days after that month,
+          from DTS deposits minus CBP withdrawals (multiplied by one
+          million for unit alignment), and is not included in the headline.
         </p>
 
         <p>
           <strong>Year-to-date 2026:</strong> sum of MTS Table 4 net
           customs receipts for January 2026 through the most recent
-          published MTS month, plus DTS days in the current month.
+          published MTS month, plus DTS days in the current month on the
+          same net basis (deposits minus CBP withdrawals). Because 2026
+          includes three net-negative months, this figure is substantially
+          below the gross duty collected over the same period.
         </p>
 
         <p>

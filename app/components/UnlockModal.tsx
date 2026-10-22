@@ -202,8 +202,8 @@ export default function UnlockModal({
           <>
             {alreadyVerified ? (
               <p className="unlock-success-body">
-                This address is already confirmed. The whole site, including the per-authority
-                rate breakdown, is unlocked on this browser.
+                This address is already confirmed. The calculator&apos;s full rate breakdown
+                and the Tariff Trends charts are unlocked on this browser.
               </p>
             ) : (
               <>
@@ -214,10 +214,10 @@ export default function UnlockModal({
                   </p>
                 ) : (
                   <p className="unlock-success-body">
-                    You&apos;re in &mdash; the whole site is unlocked on this browser. One thing
-                    still needs confirming: click the link we sent to{" "}
-                    <strong>{email.trim()}</strong> to see the per-authority rate breakdown in the
-                    calculator.
+                    Your answers are saved. One step left: click the link we sent to{" "}
+                    <strong>{email.trim()}</strong>{" "}
+                    to unlock the calculator&apos;s full rate breakdown and the Tariff Trends
+                    charts.
                   </p>
                 )}
                 <p className="unlock-success-note">
@@ -231,7 +231,7 @@ export default function UnlockModal({
             <p className="unlock-intro">
               {mode === "resend"
                 ? "Enter the same address you signed up with and we’ll send a fresh confirmation link. Your earlier answers are kept — no need to fill anything in again."
-                : "Much of this site is free with no sign-up. The more detailed tools ask for an email address and three short questions first — that’s the price of the work, in place of advertising or a subscription. Takes about twenty seconds."}
+                : "Much of this site is free with no sign-up. Two things ask for an email first: the full rate breakdown in the calculator, and the decomposition charts on Tariff Trends. That’s the price of the work, in place of advertising or a subscription. Takes about twenty seconds."}
             </p>
 
             {error && (

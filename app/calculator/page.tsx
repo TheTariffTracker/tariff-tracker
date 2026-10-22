@@ -322,8 +322,8 @@ function ConfirmBanner({ status }: { status: string }) {
         <span>
           <span className="unlock-banner-title">Email confirmed</span>
           <span className="unlock-banner-body">
-            The per-authority rate breakdown is unlocked on this browser. Look up a code below
-            to see it.
+            The calculator&apos;s full rate breakdown and the Tariff Trends charts are now
+            unlocked on this browser. Look up a code below to see the breakdown.
           </span>
         </span>
       </div>

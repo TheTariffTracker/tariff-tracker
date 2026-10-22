@@ -92,8 +92,9 @@ export default function UnlockGate({
     <div className="unlock-locked">
       <p className="unlock-locked-title">The {label} is behind a free sign-up</p>
       <p className="unlock-locked-body">
-        An email address and three short questions &mdash; no payment, no advertising. It unlocks
-        the whole site, not just this panel.
+        An email address and three short questions &mdash; no payment, no advertising. One
+        sign-up covers both gated areas: the calculator&apos;s full rate breakdown and the
+        Tariff Trends decomposition charts.
       </p>
       <button
         ref={triggerRef}

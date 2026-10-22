@@ -1,5 +1,8 @@
 import type { Metadata } from "next";
 import MainContent from "../components/MainContent";
+import { unstable_cache } from "next/cache";
+import UnlockGate from "../components/UnlockGate";
+import { getUnlockStatus } from "../lib/unlock-status";
 import { supabase } from "../lib/supabase";
 
 export const metadata: Metadata = {
@@ -239,15 +242,35 @@ async function getPolicyEvents() {
   return (data ?? []) as PolicyRow[];
 }
 
+// Cache the Yale series at the same 300s the layout already applies site-wide.
+// Reading the unlock cookie below makes this page dynamic, which would
+// otherwise mean re-querying every series on every single request.
+const CACHED = { revalidate: 300 } as const;
+
+const overallCached = unstable_cache(getOverall, ["trends-overall"], CACHED);
+const authorityCached = unstable_cache(getByAuthority, ["trends-authority"], CACHED);
+const countryGroupsCached = unstable_cache(getCountryGroups, ["trends-country-groups"], CACHED);
+const sectorsCached = unstable_cache(getSectors, ["trends-sectors"], CACHED);
+const policyCached = unstable_cache(getPolicyEvents, ["trends-policy"], CACHED);
+
 // ===================== Page =====================
 export default async function TariffTrendsPage() {
-  const [overall, authority, countryGroups, sectors, policy] = await Promise.all([
-    getOverall(),
-    getByAuthority(),
-    getCountryGroups(),
-    getSectors(),
-    getPolicyEvents(),
-  ]);
+  const unlock = await getUnlockStatus();
+
+  // Free tier first, then the gate, then the decompositions.
+  const [overall, policy] = await Promise.all([overallCached(), policyCached()]);
+
+  // The gated series are fetched ONLY for a verified visitor. Fetching them and
+  // hiding them in the markup would put ~270KB of locked data in the page
+  // source for anyone to read -- the gate would be decoration. This also means
+  // an anonymous visit costs less than it did before the gate existed.
+  const gated = unlock.verified
+    ? await Promise.all([
+        authorityCached(),
+        countryGroupsCached(),
+        sectorsCached(),
+      ])
+    : null;
 
   return (
     <MainContent
@@ -255,10 +278,25 @@ export default async function TariffTrendsPage() {
       subtitle="Effective tariff rates over time, decomposed by authority, country, and sector. Source: The Budget Lab at Yale, Tariff Rate Tracker (April 2026 snapshot). Rates projected forward through December 2026 per current law."
     >
       <OverallPanel data={overall} />
-      <AuthorityPanel data={authority} />
-      <CountryGroupPanel data={countryGroups} />
-      <SectorPanel data={sectors} />
       <PolicyEventsPanel data={policy} />
+
+      {gated ? (
+        <>
+          <AuthorityPanel data={gated[0]} />
+          <CountryGroupPanel data={gated[1]} />
+          <SectorPanel data={gated[2]} />
+        </>
+      ) : unlock.error ? (
+        <section className="border border-border bg-bg p-6 text-[13px] text-fg-muted">
+          The remaining charts are temporarily unavailable. The daily rate above
+          still applies.
+        </section>
+      ) : (
+        <UnlockGate
+          label="rest of this page"
+          awaitingConfirmation={unlock.awaitingConfirmation}
+        />
+      )}
     </MainContent>
   );
 }

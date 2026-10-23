@@ -22,6 +22,13 @@ export const CONSENT_TEXT_VERSION = "partner-optin-v1";
 
 export const MAX_NOTE_LENGTH = 500;
 
+// IMPLEMENTS A PUBLISHED PROMISE. app/privacy/page.tsx states, under "How long
+// we keep it": "Unconfirmed sign-ups: if an address never confirms, we delete
+// the record after 90 days." Drained daily by /api/retry-confirmations.
+// If this number changes, the privacy policy text must change with it --
+// nothing enforces that link but this comment.
+export const UNCONFIRMED_RETENTION_DAYS = 90;
+
 // Two limits with DELIBERATELY DIFFERENT failure modes.
 //
 // Per-IP is abuse control: breaching it is rejected outright (429).

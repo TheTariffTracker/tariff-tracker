@@ -1,14 +1,32 @@
 // ChartCard — "Daily Customs Receipts — Last 90 Days" card. Hand-rolled SVG
-// matching the v11 mockup (no charting library). Two series:
-//   - current period (orange, solid stroke + translucent fill)
-//   - prior year same days (blue, dashed stroke)
+// matching the v11 mockup (no charting library). ONE series: the current
+// period (orange, solid stroke + translucent fill).
+//
+// ** WHY THE AXIS IS CLIPPED. ** Customs duty is not a smooth daily flow.
+// Importers on CBP's Periodic Monthly Statement programme pay their deferred
+// duties once a month, and that lands on a single day -- the 16th or 17th
+// business day, every month without exception across 16 months of data. That
+// one day runs ~50x the median day ($18.7B against $348M in September 2026).
+//
+// Scaling the axis to the largest value therefore drew 88 of 90 days as a flat
+// line on the baseline with two towers, which told a reader nothing about the
+// daily activity the card exists to show. The axis is now set from the
+// ORDINARY days; settlement days are clamped to the ceiling and annotated with
+// their real value, so nothing is hidden and the rest of the series is legible.
+//
+// ** WHY THERE IS NO PRIOR-YEAR LINE. ** There used to be one, aligned by
+// calendar date (each prior point minus exactly 365 days). But the settlement
+// date moves by business day, so the two series' largest points were compared
+// against the wrong days -- the comparison was broken precisely where it
+// mattered. With a clipped axis both years' settlements would be off-chart
+// anyway, leaving a 13% baseline difference inside day-to-day noise spanning
+// $226M-$1.1B, which two overlapping lines cannot convey. Year-over-year now
+// lives on MtsBarChart, at monthly resolution where it is readable.
 //
 // Async server component that fetches `dts_daily` rows from Supabase at
 // render time. Anchor is the most recent dts_daily.record_date (DTS lags
-// ~1 business day, so this is also the chart's right edge). The current
-// period spans 90 calendar days ending at the anchor; the prior-year line
-// is calendar-aligned (each prior point is its current counterpart minus
-// exactly 365 days).
+// ~1 business day, so this is also the chart's right edge). The period spans
+// 90 calendar days ending at the anchor.
 //
 // **Critical unit conversion:** dts_daily.customs_revenue_today is stored
 // in MILLIONS of dollars. We multiply by 1e6 before plotting on a $-axis.
@@ -31,6 +49,10 @@ const PLOT_X1 = 780;
 const PLOT_Y0 = 40; // top of plot area
 const PLOT_Y1 = 220; // bottom (zero baseline)
 const PERIOD_DAYS = 90;
+// A day above this multiple of the window's median is a monthly settlement,
+// not an ordinary day. The real gap is ~50x, so anything from 3x to 20x
+// separates them cleanly; 5x is comfortably inside that and needs no tuning.
+const SETTLEMENT_MULTIPLE = 5;
 const MAX_OFFSET = PERIOD_DAYS - 1; // 89 — offsets run 0..89
 
 type DtsRow = {
@@ -114,7 +136,10 @@ function rowToPoint(row: DtsRow, periodStart: string, yMax: number): Point {
   const xRatio = offset / MAX_OFFSET;
   const x = PLOT_X0 + xRatio * (PLOT_X1 - PLOT_X0);
   const dollars = Number(row.customs_revenue_today) * 1e6;
-  const y = PLOT_Y1 - (dollars / yMax) * (PLOT_Y1 - PLOT_Y0);
+  // Clamped: a settlement day exceeds yMax by design and would otherwise be
+  // drawn above the plot area. It touches the ceiling and is labelled.
+  const y =
+    PLOT_Y1 - (Math.min(dollars, yMax) / yMax) * (PLOT_Y1 - PLOT_Y0);
   return { x, y };
 }
 
@@ -138,10 +163,9 @@ type ChartData =
   | {
       kind: "ok";
       current: DtsRow[];
-      prior: DtsRow[];
       anchorDate: string;
       periodStart: string;
-      priorPeriodStart: string;
+
     }
   | { kind: "empty" }
   | { kind: "error" };
@@ -166,40 +190,27 @@ async function getChartData(): Promise<ChartData> {
 
   const anchorDate = anchorResp.data[0].record_date as string;
   const periodStart = addDays(anchorDate, -MAX_OFFSET);
-  const priorYearAnchor = addDays(anchorDate, -365);
-  const priorPeriodStart = addDays(priorYearAnchor, -MAX_OFFSET);
 
-  // Step 2: parallel queries for current + prior periods.
-  const [currentResp, priorResp] = await Promise.all([
+  // Step 2: one query -- the current period.
+  const [currentResp] = await Promise.all([
     supabase
       .from("dts_daily")
       .select("record_date, customs_revenue_today")
       .gte("record_date", periodStart)
       .lte("record_date", anchorDate)
       .order("record_date", { ascending: true }),
-    supabase
-      .from("dts_daily")
-      .select("record_date, customs_revenue_today")
-      .gte("record_date", priorPeriodStart)
-      .lte("record_date", priorYearAnchor)
-      .order("record_date", { ascending: true }),
   ]);
 
-  if (currentResp.error || priorResp.error) {
-    console.error(
-      "ChartCard series fetch error:",
-      currentResp.error || priorResp.error,
-    );
+  if (currentResp.error) {
+    console.error("ChartCard series fetch error:", currentResp.error);
     return { kind: "error" };
   }
 
   return {
     kind: "ok",
     current: (currentResp.data ?? []) as DtsRow[],
-    prior: (priorResp.data ?? []) as DtsRow[],
     anchorDate,
     periodStart,
-    priorPeriodStart,
   };
 }
 
@@ -230,23 +241,35 @@ export default async function ChartCard() {
     );
   }
 
-  const { current, prior, anchorDate, periodStart, priorPeriodStart } = data;
+  const { current, anchorDate, periodStart } = data;
 
-  // Dynamic Y-axis from the max across both series. Falls back to $1B if
-  // both series are empty/zero so we still render a usable axis.
-  const allDollars = [
-    ...current.map((r) => Number(r.customs_revenue_today) * 1e6),
-    ...prior.map((r) => Number(r.customs_revenue_today) * 1e6),
-  ];
-  const maxDollars = allDollars.length > 0 ? Math.max(...allDollars) : 1e9;
-  const axis = computeAxis(maxDollars);
+  // Axis from the ORDINARY days only. Including the monthly settlement would
+  // set yMax ~50x too high and flatten everything else onto the baseline.
+  const allDollars = current.map((r) => Number(r.customs_revenue_today) * 1e6);
+  const sorted = [...allDollars].sort((a, b) => a - b);
+  const median = sorted.length > 0 ? sorted[Math.floor(sorted.length / 2)] : 0;
+  const settlementFloor = median * SETTLEMENT_MULTIPLE;
+  const ordinary = allDollars.filter((d) => d <= settlementFloor);
+  const axisBasis =
+    ordinary.length > 0
+      ? Math.max(...ordinary)
+      : allDollars.length > 0
+        ? Math.max(...allDollars)
+        : 1e9;
+  const axis = computeAxis(axisBasis);
 
   const currentPoints = current.map((r) => rowToPoint(r, periodStart, axis.yMax));
-  const priorPoints = prior.map((r) => rowToPoint(r, priorPeriodStart, axis.yMax));
-
   const currentPath = pointsToPath(currentPoints);
   const currentArea = pointsToAreaPath(currentPoints);
-  const priorPath = pointsToPath(priorPoints);
+
+  // Settlement days, with the x position they occupy, for annotation.
+  const settlements = current
+    .map((r, i) => ({
+      dollars: Number(r.customs_revenue_today) * 1e6,
+      date: r.record_date,
+      x: currentPoints[i].x,
+    }))
+    .filter((d) => d.dollars > settlementFloor);
 
   // X-axis: 5 evenly-spaced date labels covering the current period.
   const labelOffsets = [
@@ -270,18 +293,15 @@ export default async function ChartCard() {
                 className="inline-block w-3.5 h-[3px] rounded-[1px] bg-orange"
                 aria-hidden
               />
-              Current period
+              Daily receipts
             </span>
             <span className="inline-flex items-center gap-1.5 text-[11px] text-fg-muted">
               <span
-                className="inline-block w-3.5 h-[2px]"
+                className="inline-block w-0 h-3.5 border-l border-dashed"
                 aria-hidden
-                style={{
-                  backgroundImage:
-                    "repeating-linear-gradient(90deg, var(--color-blue) 0, var(--color-blue) 4px, transparent 4px, transparent 7px)",
-                }}
+                style={{ borderColor: "var(--color-fg-muted)" }}
               />
-              Prior year (same days)
+              Monthly settlement
             </span>
           </div>
         </div>
@@ -304,7 +324,7 @@ export default async function ChartCard() {
           preserveAspectRatio="none"
           className="w-full h-[280px] block"
           role="img"
-          aria-label="Daily customs receipts over the last 90 days, current period versus prior year"
+          aria-label="Daily customs receipts over the last 90 days. Monthly settlement days exceed the chart scale and are labelled with their value."
         >
           {/* Horizontal gridlines + y-axis labels */}
           {axis.ticks.map((tick, i) => {
@@ -344,18 +364,6 @@ export default async function ChartCard() {
             );
           })}
 
-          {/* Prior-year dashed line */}
-          {priorPath && (
-            <path
-              d={priorPath}
-              stroke="var(--color-blue)"
-              strokeWidth={1.3}
-              strokeDasharray="4,3"
-              fill="none"
-              opacity={0.75}
-            />
-          )}
-
           {/* Current-period filled area + solid stroke */}
           {currentPath && (
             <>
@@ -368,6 +376,53 @@ export default async function ChartCard() {
               />
             </>
           )}
+
+          {/* Monthly settlement markers. These days exceed the axis by design
+              (~50x the median), so the line is clamped to the ceiling here and
+              the real value is printed above it. Without this the reader would
+              see the line hit the top with no explanation. */}
+          {settlements.map((sd) => {
+            // Keep the label inside the plot at both edges.
+            const anchor =
+              sd.x > PLOT_X1 - 70
+                ? "end"
+                : sd.x < PLOT_X0 + 70
+                  ? "start"
+                  : "middle";
+            return (
+              <g key={`settlement-${sd.date}`}>
+                <line
+                  x1={sd.x}
+                  y1={PLOT_Y0 - 4}
+                  x2={sd.x}
+                  y2={PLOT_Y1}
+                  stroke="var(--color-fg-muted)"
+                  strokeWidth={1}
+                  strokeDasharray="3,3"
+                  opacity={0.55}
+                />
+                <text
+                  x={sd.x}
+                  y={PLOT_Y0 - 10}
+                  fill="var(--color-orange)"
+                  fontSize={11}
+                  fontWeight={700}
+                  textAnchor={anchor}
+                >
+                  {formatTickLabel(sd.dollars)}
+                </text>
+                <text
+                  x={sd.x}
+                  y={PLOT_Y0 - 22}
+                  fill="var(--color-fg-muted)"
+                  fontSize={9}
+                  textAnchor={anchor}
+                >
+                  {formatShortDate(sd.date)} settlement
+                </text>
+              </g>
+            );
+          })}
         </svg>
       </div>
     </section>

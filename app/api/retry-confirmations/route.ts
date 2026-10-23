@@ -1,6 +1,18 @@
 // app/api/retry-confirmations/route.ts
 //
-// GET /api/retry-confirmations -- drains the confirmation-email backlog.
+// GET /api/retry-confirmations -- the daily lead_capture maintenance job.
+//
+// Two jobs under one schedule, in this order:
+//   1. PURGE unconfirmed rows older than UNCONFIRMED_RETENTION_DAYS. This
+//      implements the retention promise published in the privacy policy,
+//      which had no implementation behind it until 2026-10-23.
+//   2. DRAIN the confirmation-email backlog (below).
+//
+// Purge runs FIRST so a row that is about to be deleted is never emailed.
+//
+// The path still says "retry-confirmations" because renaming it would mean
+// editing vercel.json and re-verifying the cron registration for no functional
+// gain. Treat the name as historical.
 //
 // A row with verified = false AND confirm_sent_at IS NULL is someone who
 // signed up but never received their confirmation link: either Resend failed,
@@ -19,7 +31,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin } from "../../lib/supabaseAdmin";
 import { rateLimitHit } from "../../lib/rate-limit";
-import { RATE_LIMITS } from "../../lib/unlock-config";
+import {
+  RATE_LIMITS,
+  UNCONFIRMED_RETENTION_DAYS,
+} from "../../lib/unlock-config";
 import {
   newToken,
   sendConfirmation,
@@ -51,6 +66,29 @@ export async function GET(req: NextRequest) {
   const started = Date.now();
   const admin = getSupabaseAdmin();
 
+  // ---- 1. Retention purge -------------------------------------------------
+  // Deliberately before the retry loop: a row past its retention window should
+  // be deleted, not emailed. .select() makes the delete return the rows it
+  // removed, so the count costs no extra query.
+  const cutoff = new Date(
+    Date.now() - UNCONFIRMED_RETENTION_DAYS * 24 * 60 * 60 * 1000,
+  ).toISOString();
+
+  let purged = 0;
+  const { data: purgedRows, error: purgeError } = await admin
+    .from("lead_capture")
+    .delete()
+    .eq("verified", false)
+    .lt("created_at", cutoff)
+    .select("id");
+  if (purgeError) {
+    // Logged, not fatal: a failed purge must not stop the backlog drain.
+    console.error("retry-confirmations: retention purge failed", purgeError);
+  } else {
+    purged = purgedRows?.length ?? 0;
+  }
+
+  // ---- 2. Confirmation backlog -------------------------------------------
   const { data: rows, error } = await admin
     .from("lead_capture")
     .select("email")
@@ -132,6 +170,8 @@ export async function GET(req: NextRequest) {
     .is("confirm_sent_at", null);
 
   const summary = {
+    purged,
+    retentionDays: UNCONFIRMED_RETENTION_DAYS,
     attempted,
     sent,
     remaining: remaining ?? null,

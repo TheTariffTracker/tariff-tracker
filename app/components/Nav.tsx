@@ -77,7 +77,14 @@ export default function Nav() {
 
   return (
     <nav className="flex items-stretch bg-bg border-t-[3px] border-t-orange border-b border-b-border">
-      <div className="nav-items flex min-w-0 overflow-x-auto pl-6">
+      {/* Narrow-screen tightening (the max-[700px]: variants here and in
+          SearchBar): three of this strip's four children are shrink-0, and at
+          375px they totalled 391px inside a 375px nav, which pushed the
+          Support pill's right edge out to 414 — partly off screen. The links
+          scroller absorbs the squeeze correctly (min-w-0 + overflow-x-auto),
+          so the fix takes ~66px out of padding and the search field rather
+          than restructuring the strip. */}
+      <div className="nav-items flex min-w-0 overflow-x-auto pl-6 max-[700px]:pl-3">
         {VISIBLE_ITEMS.map((item) => (
           <Link
             key={item.label}
@@ -101,7 +108,7 @@ export default function Nav() {
           onClick={() => setOpen((v) => !v)}
           aria-haspopup="menu"
           aria-expanded={open}
-          className={`${moreActive ? ACTIVE : INACTIVE} flex items-center gap-1 cursor-pointer`}
+          className={`${moreActive ? ACTIVE : INACTIVE} flex items-center gap-1 cursor-pointer max-[700px]:px-3`}
         >
           More Tools
           <span aria-hidden className="text-[10px]">
@@ -135,14 +142,14 @@ export default function Nav() {
       {/* Search — pinned to the far right of the strip (ml-auto absorbs the
           space after More Tools). Moved here from the masthead in the nav
           restructure. shrink-0 so it keeps its width while the items scroll. */}
-      <div className="flex items-center shrink-0 ml-auto px-3">
+      <div className="flex items-center shrink-0 ml-auto px-3 max-[700px]:px-2">
         <SearchBar />
       </div>
 
       {/* Support — soft-orange pill linking to Ko-fi. Outermost-right element;
           deliberately the only filled control in the strip so it reads as the
           one call-to-action without shouting. */}
-      <div className="flex items-center shrink-0 pr-4">
+      <div className="flex items-center shrink-0 pr-4 max-[700px]:pr-3">
         <a
           href="https://ko-fi.com/tarifftracker"
           target="_blank"

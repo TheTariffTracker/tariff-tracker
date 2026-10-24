@@ -84,6 +84,26 @@ body {
   font-family: var(--font-sans), system-ui, sans-serif;
 }
 
+/* Backstop against sideways scrolling. The two actual causes at 375px were
+   the info-icon tooltips (fixed in the .tooltip media query further down) and
+   the nav strip (fixed in Nav.tsx / SearchBar.tsx); with both repaired the
+   document measures exactly 375px at a 375px viewport, so this rule changes
+   nothing today. It is here to stop a future overflow from making the whole
+   site pan sideways in portrait before anyone notices.
+
+   Safe because nothing on the site uses position:sticky or position:fixed in
+   normal flow — that is the one thing overflow-x:hidden on the root breaks.
+   The repositioned tooltips use position:fixed and are NOT clipped by it,
+   since no ancestor has a transform/filter that would make it their
+   containing block. Both facts were measured, not assumed.
+
+   It is a backstop, not a licence: it will silently swallow future horizontal
+   overflow too, so layout work still needs checking at 375px. */
+html,
+body {
+  overflow-x: hidden;
+}
+
 /* ==========================================================================
    Masthead — cream brand header at the top of every page. Stays cream in
    both light and dark themes (the body content below is what flips). The
@@ -303,6 +323,41 @@ body {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
   text-transform: none;
   letter-spacing: normal;
+}
+
+/* Narrow screens: anchor the tooltip to the VIEWPORT rather than to its icon.
+   Two problems this solves at once.
+
+   1. Layout. Absolutely positioned at left:0 with a fixed 300px width, a
+      tooltip belonging to an icon near the right edge reached x=637 on a
+      375px viewport. visibility:hidden does not take an element out of the
+      scroll-width calculation, so every page could be panned 263px sideways
+      even with no tooltip open.
+
+   2. Readability. Tooltips DO open on touch — tapping focuses the span
+      (tabIndex=0) and the :focus rule reveals it, contrary to the old note in
+      InfoIcon.tsx — and they opened mostly off screen, so reading one meant
+      scrolling sideways.
+
+   Icons sit on both the left and the right of different layouts, so no
+   icon-relative anchoring keeps them all on screen; pinning to the viewport
+   is the only rule that works everywhere. position:fixed is correct here
+   because no ancestor has a transform or filter that would become its
+   containing block (checked). top:auto keeps the box at its static position,
+   i.e. beside the icon the reader just tapped, and the margin-top nudges it
+   clear of that line. Measured at 375px: left 12, right 363, fully on screen.
+
+   Known trade-off: while open it can cover the figure it describes. Dismissed
+   by tapping elsewhere, and preferable to being unreadable off screen. */
+@media (max-width: 700px) {
+  .tooltip {
+    position: fixed;
+    top: auto;
+    left: 12px;
+    right: 12px;
+    width: auto;
+    margin-top: 20px;
+  }
 }
 
 /* ==========================================================================

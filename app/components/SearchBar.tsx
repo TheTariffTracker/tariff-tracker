@@ -30,13 +30,17 @@ export default function SearchBar() {
       onSubmit={onSubmit}
       className="flex items-center bg-bg-alt border border-border-strong rounded transition-colors focus-within:border-orange"
     >
+      {/* max-[700px]:w-[96px] — see the Nav.tsx comment: this field is the
+          widest shrink-0 element in the nav strip, and 34px off it is most of
+          what makes the strip fit a 375px phone. The placeholder truncates
+          further at that width; it already truncated at 130px. */}
       <input
         type="search"
         value={q}
         onChange={(e) => setQ(e.target.value)}
         placeholder="Search codes & tariffs"
         aria-label="Search HTS codes and tariff actions"
-        className="w-[130px] bg-transparent px-2.5 py-1.5 text-xs text-fg outline-none placeholder:text-fg-muted"
+        className="w-[130px] max-[700px]:w-[96px] bg-transparent px-2.5 py-1.5 text-xs text-fg outline-none placeholder:text-fg-muted"
       />
       <button
         type="submit"

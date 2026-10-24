@@ -77,14 +77,16 @@ export default function Nav() {
 
   return (
     <nav className="flex items-stretch bg-bg border-t-[3px] border-t-orange border-b border-b-border">
-      {/* Narrow-screen tightening (the max-[700px]: variants here and in
-          SearchBar): three of this strip's four children are shrink-0, and at
-          375px they totalled 391px inside a 375px nav, which pushed the
-          Support pill's right edge out to 414 — partly off screen. The links
-          scroller absorbs the squeeze correctly (min-w-0 + overflow-x-auto),
-          so the fix takes ~66px out of padding and the search field rather
-          than restructuring the strip. */}
-      <div className="nav-items flex min-w-0 overflow-x-auto pl-6 max-[700px]:pl-3">
+      {/* Hidden below 700px. This scroller has min-w-0 + overflow-x-auto, so
+          when the three shrink-0 siblings need room it is the one that gives,
+          and on a 375px phone it collapsed to a 39px keyhole — mechanically
+          correct, and useless as navigation: nine of the site's thirteen
+          pages were unreachable in portrait. Below 700px those nine links
+          move into the More Tools menu instead (see below), which is why the
+          search field also narrows in SearchBar.tsx: with this scroller gone
+          the remaining three children measure 358px inside 375px, where a
+          130px search field would have put them at 392px. */}
+      <div className="nav-items flex min-w-0 overflow-x-auto pl-6 max-[700px]:hidden">
         {VISIBLE_ITEMS.map((item) => (
           <Link
             key={item.label}
@@ -97,11 +99,13 @@ export default function Nav() {
       </div>
 
       {/* More Tools — sits OUTSIDE the overflow-x-auto strip so the dropdown
-          isn't clipped, and stays pinned at the right while the strip scrolls
-          on narrow screens. */}
+          isn't clipped. On desktop it sits to the right of the scrolling link
+          strip; below 700px that strip is hidden, so this becomes the first
+          element in the nav and carries every page. border-l is dropped there
+          because it would otherwise draw a stray rule at x=0. */}
       <div
         ref={containerRef}
-        className="relative shrink-0 flex items-stretch border-l border-border"
+        className="relative shrink-0 flex items-stretch border-l border-border max-[700px]:border-l-0"
       >
         <button
           type="button"
@@ -116,10 +120,40 @@ export default function Nav() {
           </span>
         </button>
         {open && (
+          /* Anchoring: right-0 aligns the panel's right edge with the button,
+             which is correct on desktop where the button sits at the far
+             right. Below 700px the button is at the far LEFT instead (the
+             link scroller is hidden), so right-0 put the panel's left edge at
+             x=-34 and clipped the start of every label. max-[700px]:left-0
+             flips it to open rightward from the button, where there is 336px
+             of room for the full names. */
           <div
             role="menu"
-            className="absolute right-0 top-full min-w-[180px] bg-bg border border-border rounded-b shadow-lg z-50 overflow-hidden"
+            className="absolute right-0 top-full min-w-[180px] max-[700px]:right-auto max-[700px]:left-0 max-[700px]:min-w-[210px] bg-bg border border-border rounded-b shadow-lg z-50 overflow-hidden"
           >
+            {/* Below 700px this menu carries the whole site: the nine links
+                from the hidden scroller first, then the four that live here
+                at every width. They are rendered as a separate list rather
+                than merged so desktop markup is unchanged, at the cost of
+                nine duplicated anchors in the DOM on every page. */}
+            <div className="min-[701px]:hidden">
+              {VISIBLE_ITEMS.map((item) => (
+                <Link
+                  key={item.label}
+                  href={item.href}
+                  role="menuitem"
+                  onClick={() => setOpen(false)}
+                  className={`block px-4 py-2.5 text-[13px] transition-colors hover:bg-bg-alt ${
+                    pathname === item.href
+                      ? "text-orange"
+                      : "text-fg-muted hover:text-fg"
+                  }`}
+                >
+                  {item.label}
+                </Link>
+              ))}
+              <div className="border-t border-border" aria-hidden />
+            </div>
             {MORE_TOOLS_ITEMS.map((item) => (
               <Link
                 key={item.label}

@@ -344,7 +344,8 @@ export default function UnlockModal({
             {mode === "full" && (
               <p className="unlock-fine">
                 We may email you about significant changes to the project &mdash; a few times a
-                year at most, and you can opt out without losing access. See our{" "}
+                year at most, and you can opt out without losing access. By unlocking you agree
+                to our <a href="/terms">Terms</a>; see also our{" "}
                 <a href="/privacy">Privacy Policy</a>.
               </p>
             )}

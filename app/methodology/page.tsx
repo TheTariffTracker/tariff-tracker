@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import MainContent from "../components/MainContent";
 
 // Methodology page (route: "/methodology"). Static content page describing
@@ -325,13 +326,54 @@ export default function MethodologyPage() {
             a maintained time-series feed in the future.
           </li>
           <li>
-            <strong>Important limitation:</strong> The published snapshot
-            is aggregate-only. It does not include per-HTS-code or
-            per-individual-country effective rates. This is the single
-            biggest gap in our data layer right now. Without per-HTS data,
-            our Rate Calculator can show only the legal rate components
-            (MFN base + applicable special programs by Chapter 99
-            cross-reference) - not a finished effective-rate computation.
+            <strong>Scope of this dataset:</strong> The aggregate snapshot
+            above is aggregate-only &mdash; it carries no per-HTS-code or
+            per-country rates, and it is what the Tariff Trends page is
+            built from. It is not what the Rate Calculator uses. That is a
+            second, separate Yale dataset, described next.
+          </li>
+        </ul>
+
+        <h3 className="text-lg font-semibold mt-6 mb-2">
+          Yale rate panel (Rate Calculator)
+        </h3>
+        <p className="mb-3">
+          Yale also publishes a full HTS-10 &times; country rate panel as a
+          periodic &quot;vintage&quot; release, separate from the aggregate
+          workbook. This is the source behind every figure on the Rate
+          Calculator, and until now this page did not describe it.
+        </p>
+        <ul className="list-disc list-outside ml-6 space-y-2">
+          <li>
+            <strong>What it contains:</strong> For each HTS-10 code, country
+            of origin, and validity interval, a base rate plus a per-authority
+            breakdown &mdash; Section 232, Section 301 (including the
+            semiconductor and Brazil actions), IEEPA reciprocal, IEEPA
+            fentanyl, Section 122, Section 338, Section 201, and a residual
+            &quot;other&quot; &mdash; and the total effective rate those sum
+            to. A parallel set of statutory_* columns carries the rate before
+            exemption and utilization adjustments.
+          </li>
+          <li>
+            <strong>How we serve it:</strong> The panel is tens of millions of
+            rows. We sort it by code and store it as a split parquet, so a
+            single lookup range-reads only the one row group covering the code
+            rather than downloading the file. Each page shows which vintage
+            answered it, and the Cite button records that vintage so a lookup
+            can be reproduced later.
+          </li>
+          <li>
+            <strong>It is a model, not the tariff schedule.</strong> The
+            effective rate is Yale&apos;s computation of what applies, not a
+            legal determination. The published MFN, Special and Column 2 rates
+            shown further down the calculator page come straight from the HTS
+            and are the official figures.
+          </li>
+          <li>
+            <strong>Vintage lag.</strong> A vintage is a snapshot. Intervals
+            extending past its publication date reflect policy as modelled at
+            that moment and assume nothing further changes. The calculator
+            labels any such lookup.
           </li>
         </ul>
 
@@ -591,14 +633,51 @@ export default function MethodologyPage() {
           things we cannot currently do, and we want you to know.
         </p>
 
+        {/* Why this is a disclosure and not a TODO, recorded 2026-10-25 so it
+            is not re-litigated: a correct AD/CVD number in a (code, country,
+            date) calculator is not available to anyone at that granularity.
+            Order scope is defined by narrative product description, so HTS
+            mappings are approximate and the codes recited in a notice are not
+            dispositive. The rate is per-producer, so a panel keyed on code and
+            country can only ever carry an order average. And the cash deposit
+            rate is not the final liability -- reconciled at liquidation, which
+            Yale puts at ~2.6 years on average and up to 14.
+
+            Yale reached the same conclusion. They designed a rate_adcvd layer
+            (HTS-10 x country, order-average, stacked additively), built a
+            loader, template and fixture tests, and PARKED it on 2026-06-08
+            rather than wire it into production -- see docs/adcvd_layer_design.md in
+            Budget-Lab-Yale/tariff-rate-tracker. Their blocker is source
+            data: Commerce's own ITA-0039 dataset has been stale since 2020, so
+            current rates live only in ACCESS order pages and CBP ACE messages,
+            and the curated orders file is the actual work.
+
+            FUTURE OPTION, if this is ever picked up: ship a coverage POINTER,
+            never a rate. "N active orders list this HTS prefix for this
+            country, rates in those orders range X-Y, check scope." The raw
+            material is partly in hand already, since the Federal Register
+            notices behind /ad-cvd-orders usually recite HTS numbers in their
+            scope section. Extraction would be noisy and the output is a lead,
+            not a determination -- which is the honest shape for it. */}
         <p>
-          <strong>No per-HTS-code effective rate breakdown.</strong>{" "}
-          Without Yale&apos;s per-HTS data (currently aggregate-only), we
-          cannot show &quot;this specific code has an effective rate of
-          X% after Section 301 and IEEPA stacking&quot; for individual
-          HTS entries. The Rate Calculator shows the legal rate
-          components and the special programs that apply to a chosen
-          country, but does not compute a final percentage.
+          <strong>
+            The Rate Calculator does not include antidumping or
+            countervailing duties.
+          </strong>{" "}
+          This is the most consequential gap on the site, so it is stated
+          first. Yale&apos;s rate panel covers the trade-remedy programs that
+          attach to a code and country &mdash; Sections 232, 301, 201, 122,
+          338 and the IEEPA actions. AD/CVD duties attach to a specific
+          foreign producer or exporter rather than to a tariff line, and the
+          panel carries no field for them. For goods under an AD/CVD order the
+          calculator&apos;s total therefore omits what is frequently the
+          largest component; these rates not uncommonly exceed 100%. If your
+          product may be covered, check our{" "}
+          <Link href="/ad-cvd-orders" className={linkClass}>
+            AD/CVD orders
+          </Link>{" "}
+          page and Commerce&apos;s own dockets before relying on any figure
+          here.
         </p>
 
         <p>

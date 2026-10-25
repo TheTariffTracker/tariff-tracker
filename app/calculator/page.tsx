@@ -693,6 +693,16 @@ function Results({ result, countryCode }: { result: LookupResult; countryCode: s
             product-specific rulings may still affect the amount actually owed.
           </p>
           <p className="m-0">
+            <strong className="text-fg">Antidumping and countervailing duties are not included.</strong>{" "}
+            AD/CVD rates attach to a specific foreign producer rather than to a tariff line, so they are
+            absent from the rate panel entirely and are not part of the total above. Where an order applies
+            they are frequently the largest component and not uncommonly exceed 100%. Check{" "}
+            <Link href="/ad-cvd-orders" className="text-orange underline hover:text-orange-bright transition-colors">
+              AD/CVD orders
+            </Link>{" "}
+            if your product may be covered.
+          </p>
+          <p className="m-0">
             For exact rates at a specific date, consult{" "}
             <a href={`https://hts.usitc.gov/search?query=${encodeURIComponent(queriedCode)}`} target="_blank" rel="noopener noreferrer" className="text-orange underline hover:text-orange-bright transition-colors">USITC HTS Online</a>, a licensed customs broker, or{" "}
             <a href="https://budgetlab.yale.edu/research/introducing-tariff-rate-tracker-open-source-tool-daily-effective-tariff-rates" target="_blank" rel="noopener noreferrer" className="text-orange underline hover:text-orange-bright transition-colors">Yale Budget Lab&apos;s Tariff Rate Tracker</a>.

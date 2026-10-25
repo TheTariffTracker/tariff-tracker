@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import MainContent from "../components/MainContent";
 import { supabase } from "../lib/supabase";
 import { getCountryName } from "../lib/census-countries";
@@ -59,6 +60,16 @@ function formatUSD(n: number): string {
 }
 
 // Per-authority add-on columns, in display order. base_rate is shown separately.
+// Yale does not apply the MFN rate to USMCA parties. For these two countries
+// base_rate is an expected rate blended across shipments using product-level
+// USMCA utilization shares (USITC DataWeb), so it is NOT what any individual
+// entry is charged: a qualifying shipment pays ~nothing, a non-qualifying one
+// pays full MFN. Verified 2026-10-25 against the live panel -- HTS 6109100012
+// on 2026-10-01 returns 16.5% for Germany and 0.46% for Canada, implying ~97%
+// utilization. See /methodology, "Canada and Mexico base rates are modelled
+// averages", which this note deliberately mirrors.
+const USMCA_BLEND_COUNTRIES = new Set(["1220", "2010"]);
+
 const AUTHORITY_COMPONENTS: Array<{ key: string; label: string }> = [
   { key: "rate_232", label: "Section 232 (metals/derivatives)" },
   { key: "rate_301", label: "Section 301" },
@@ -422,6 +433,7 @@ function EffectiveRate({
   // false. Removed rather than relabelled, because what the field actually
   // means in Yale's schema has not been confirmed. Confirm that first, then
   // decide whether a correct version belongs here.
+  const usmcaBlend = USMCA_BLEND_COUNTRIES.has(countryInput);
   const specific = effective.flags?.specificOrCompound === true;
   const notYet = effective.flags?.notYetEffective === true;
 
@@ -464,6 +476,21 @@ function EffectiveRate({
         </p>
       )}
 
+      {usmcaBlend && (
+        <p className="text-[12px] mt-2 mb-3 px-3 py-2 border-l-2 border-orange bg-bg-warm text-fg-muted">
+          <strong className="text-fg">This is a modelled average, not a shipment rate.</strong>{" "}
+          For {getCountryName(countryInput)}, the base component is blended across
+          shipments that qualify under USMCA rules of origin and those that don&apos;t,
+          using product-level utilization shares. A qualifying entry pays close to
+          nothing; a non-qualifying one pays the full MFN rate. Yours pays one or the
+          other, not this.{" "}
+          <Link href="/methodology" className="text-orange underline hover:text-orange-bright transition-colors">
+            How this works
+          </Link>
+          .
+        </p>
+      )}
+
       {/* Per-authority stack — THE GATED GOOD (Decision 1c). The headline rate
           above stays free; this decomposition exists nowhere else on the site
           or in public, which is why it is what the gate protects. The MFN /
@@ -480,7 +507,10 @@ function EffectiveRate({
         ) : unlock.verified ? (
           <ul className="m-0 p-0 list-none text-[13px]">
             <li className="flex justify-between py-0.5">
-              <span>Base rate (MFN){specific ? " — specific/compound" : ""}</span>
+              <span>
+                Base rate ({usmcaBlend ? "USMCA-blended" : "MFN"})
+                {specific ? " — specific/compound" : ""}
+              </span>
               <span className="tabular-nums">{formatPct(baseRate)}</span>
             </li>
             {components.map((c, i) => (

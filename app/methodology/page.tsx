@@ -354,6 +354,48 @@ export default function MethodologyPage() {
         </p>
 
         <p>
+          <strong>
+            Canada and Mexico base rates are modelled averages, not a rate any
+            shipment pays.
+          </strong>{" "}
+          This one matters if you use the Rate Calculator for USMCA countries.
+          Yale does not apply the MFN rate to Canada and Mexico; it applies
+          product-level <em>USMCA utilization shares</em> drawn from USITC
+          DataWeb, which blend the duty-free rate paid by goods that qualify
+          under USMCA rules of origin with the MFN rate paid by goods that
+          don&apos;t. The result is an expected rate across all shipments of
+          that code, which is the right input for an aggregate effective-rate
+          model and is <em>not</em> what any individual entry is charged.
+        </p>
+        <p>
+          A worked example. For HTS 6109.10.00.12 on October 1, 2026, the panel
+          returns a base rate of 16.5% for Germany and 0.46% for Canada. Nobody
+          importing that shirt from Canada pays 0.46%. A qualifying shipment
+          pays essentially nothing and a non-qualifying one pays 16.5%; the
+          0.46% implies that about 97% of that trade qualifies. Yale reports
+          trade-weighted utilization rising from roughly 0.40&ndash;0.50 in the
+          first half of 2025 to 0.85&ndash;0.88 in the second half, so the size
+          of this effect varies a great deal by product and by period.
+        </p>
+        <p>
+          Two consequences worth stating plainly. A Canada or Mexico figure on
+          the calculator will understate the duty on a shipment that does not
+          qualify, and overstate it on one that does. And because the shares
+          are estimated from past trade, they are a backward-looking input: a
+          product whose sourcing has recently changed will be mismodelled until
+          the shares are refreshed.
+        </p>
+        <p>
+          The <code className={codeClass}>usmca_eligible</code> field in the
+          same data is a separate thing, and not a country-level one. It
+          records whether the tariff line carries a Special-rate provision
+          including the USMCA indicator &mdash; a property of the HTS line, so
+          it returns true when you query China or Germany just as it does for
+          Canada. We deliberately do not surface it anywhere, because beside a
+          country name it reads as a claim about that country.
+        </p>
+
+        <p>
           <strong>Cash collection date versus import month.</strong> DTS
           and MTS report customs revenue when collected (typically one to
           two months after the goods entered the country). Census reports

@@ -47,11 +47,11 @@ const SECTIONS: Section[] = [
       },
       {
         label: "How to use it.",
-        body: `Just read it. At the very top of every page (the Dashboard included) sits the live revenue counter, showing cumulative customs duties collected, with the current month's provisional figure layered on top. Below the counter, a strip of key statistics scrolls across. The Dashboard's own content is a 90-day chart of daily customs receipts (with a faint line showing the same days a year earlier for comparison), followed by two cards: recent Federal Register tariff filings, and the top product categories by duties for the most recent month.`,
+        body: `Just read it. At the very top of every page (the Dashboard included) sits the live revenue counter, showing cumulative customs duties collected net of refunds, broken into gross collected and refunded, with the current month's provisional figure alongside. Below the counter, a strip of key statistics scrolls across. The Dashboard's own content is a 90-day chart of daily customs receipts, followed by two cards: recent Federal Register tariff filings, and the top product categories by duties for the most recent month.`,
       },
       {
         label: "How to read results.",
-        body: `The cumulative counter is the cent-accurate total from finalized Treasury monthly statements; the current-month number is provisional and updates daily until that month closes. On the 90-day chart, the comparison line is calendar-aligned so weekends and holidays line up. The product-categories card shows a year-over-year change column; a dash means there's no comparable figure from the prior year.`,
+        body: `The cumulative counter is the cent-accurate net total from finalized Treasury monthly statements; the current-month number is provisional and updates daily until that month closes. On the 90-day chart, one day each month towers over the rest: that is the CBP periodic monthly statement, when importers settle deferred duties in a single payment, and it runs to roughly 70% of the month's total. Those days are marked with a dashed line and their real value, and the chart's scale is set from ordinary days so the rest of the series stays readable rather than being flattened. The product-categories card shows a year-over-year change column; a dash means there's no comparable figure from the prior year.`,
       },
       {
         label: "Current limits.",
@@ -239,7 +239,7 @@ const SECTIONS: Section[] = [
       /* VERSION-SENSITIVE: Tariff Browser - v1 has no filters by tariff program (301/232/surcharge), country applicability, or rate range; these depend on Yale Budget Lab effective-rate data not yet loaded */
       {
         label: "Current limits.",
-        body: `This first version filters by keyword and chapter only. Filtering by tariff program (Section 301, Section 232, executive surcharges), by country applicability, or by rate range isn't available yet - those depend on per-code effective-rate data the project hasn't loaded. The page is built to add those filters later without changing how you use it today.`,
+        body: `This version filters by keyword and chapter only. Filtering by tariff program (Section 301, Section 232, executive surcharges), by country applicability, or by rate range isn't available yet. The per-code effective-rate data those filters would need is now loaded - it is what powers the Rate Calculator - so this is a matter of building the filters rather than waiting on data. The page is built to add them without changing how you use it today.`,
       },
     ],
   },
@@ -249,7 +249,7 @@ const SECTIONS: Section[] = [
     parts: [
       {
         label: "What it does.",
-        body: `Looks up the duty-rate picture for a single product: its baseline (Most-Favored-Nation, or MFN) rate, any free-trade-agreement preferential rate, and the additional tariff programs likely to apply for a given country of origin.`,
+        body: `Computes the total effective tariff rate for a single product from a specific country on a specific date, and shows what each legal authority contributes to it. If you supply a customs value it also estimates the duty in dollars. Alongside the computed rate it shows the published schedule rates (MFN, Special, Column 2) straight from the USITC.`,
       },
       {
         label: "Who it's for.",
@@ -257,16 +257,24 @@ const SECTIONS: Section[] = [
       },
       {
         label: "How to use it.",
-        body: `Enter an HTS code in any format (such as 8703230140, 8703.23.01.40, or just the chapter 8703) then pick a country of origin from the dropdown and submit. If the exact code you enter has no rate of its own, the tool walks up to the nearest parent code that does and tells you which code the rate came from.`,
+        body: `Enter an HTS code in any format (such as 8703230140, 8703.23.01.40, or just the chapter 8703), pick a country of origin, and set the as-of date; optionally add a customs value to get a dollar estimate. If the exact code you enter has no published rate of its own, the tool walks up to the nearest parent code that does and tells you which code the rate came from.`,
       },
       {
         label: "How to read results.",
-        body: `You'll get the MFN base rate, any applicable preferential rate, and a list of special programs (Section 232, Section 301, IEEPA, USMCA) flagged as relevant to your code and country. These are identified from the schedule's own cross-references.`,
+        body: `The headline figure is the total effective rate for that code, country and date, with the interval it applies to and the data vintage that produced it. Beneath it, the Breakdown lists what each authority contributes - the base rate plus Section 232, Section 301, IEEPA, Section 122, Section 338, Section 201 and the rest - summing to that total. That breakdown is the one part of the page behind a free sign-up; the headline rate, the duty estimate, the published schedule rates and the Cite button are all open. Further down, the General, Special and Column 2 rows are the official USITC figures rather than anything computed.`,
       },
-      /* VERSION-SENSITIVE: Rate Calculator - currently the "lite" build; rewrite this part in full when the version that computes a final stacked rate / dollar amount ships (depends on Yale rate_timeseries data) */
+      /* VERSION-SENSITIVE: Rate Calculator - the "lite" copy that lived here was
+         rewritten 2026-10-27, long after the full version shipped on 2026-07-22.
+         It had been telling readers the tool "does not add them into a single
+         combined percentage or a final dollar amount" while the live page did
+         both. If the limits below change, change this the same day. */
       {
         label: "Current limits.",
-        body: `This is the lite version. It tells you which rates apply but does not add them into a single combined percentage or a final dollar amount - you stack and apply them yourself. The country dropdown covers a fixed set of top trading partners plus an "Any country" option; countries outside that list aren't supported yet. Any special-program reference the tool doesn't recognize is shown verbatim with a link to the USITC for manual lookup. When the full version lands, this section will be rewritten to cover the end-to-end calculation.`,
+        body: `Four things it cannot tell you. It excludes antidumping and countervailing duties entirely: those attach to a specific foreign producer rather than to a tariff line, and where an order applies they are frequently the largest component. For Canada and Mexico the base rate is a modelled average blending shipments that qualify under USMCA rules of origin with those that don't, so it is not the rate any single entry pays. Lines carrying a specific or compound duty (a per-unit or per-weight charge) get no dollar figure, and the percentage shown leaves that component out. And the country list covers 24 named trading partners plus an "Any country" option.`,
+      },
+      {
+        label: "How current it is.",
+        body: `The rate panel is a dated snapshot, and the page names the vintage that answered your lookup. Intervals running past that vintage's publication date reflect policy as modelled at the time and assume nothing further changes; the page labels those. For an actual customs filing, use the official HTS and a licensed customs broker.`,
       },
     ],
   },
@@ -398,7 +406,7 @@ const SECTIONS: Section[] = [
       /* VERSION-SENSITIVE: Historical Archive - v1 lacks a "Revenue by Tariff Action" breakdown (Section 232/301/IEEPA attribution); depends on Yale Budget Lab effective-rate parsing not yet built */
       {
         label: "Current limits.",
-        body: `This version can't yet attribute revenue to specific tariff actions - there's no "how much came from Section 232 vs. Section 301 vs. IEEPA" breakdown, because that requires per-code effective-rate data the project hasn't built. A panel for it is planned and will slot in without disturbing the rest of the page.`,
+        body: `This version can't yet attribute revenue to specific tariff actions - there's no "how much came from Section 232 vs. Section 301 vs. IEEPA" breakdown. The per-code effective-rate data is now loaded (it powers the Rate Calculator), so the obstacle is no longer the data but the join: Census reports duties by import month and HTS code, while the rate panel reports rates by code, country and date, and reconciling them is its own piece of work. A panel for it is planned and will slot in without disturbing the rest of the page.`,
       },
     ],
   },
@@ -408,7 +416,7 @@ const SECTIONS: Section[] = [
     parts: [
       {
         label: "What it does.",
-        body: `Charts the effective U.S. tariff rate over time (the average rate actually applied) broken out by the legal authority behind it (Section 232, Section 301, IEEPA), by country group, and by economic sector.`,
+        body: `Charts the effective U.S. tariff rate over time - the average rate actually applied - as a single daily series, and then decomposes it by the legal authority behind it (Section 232, Section 301, IEEPA), by trading partner, and by economic sector.`,
       },
       {
         label: "Who it's for.",
@@ -416,7 +424,7 @@ const SECTIONS: Section[] = [
       },
       {
         label: "How to use it.",
-        body: `Read the six panels of charts. They cover the effective rate trend, the contribution of each authority, and breakdowns across country groups and sectors, with a timeline of policy events at the bottom for reference.`,
+        body: `Two things are open to everyone: the daily effective-rate chart and the timeline of tariff policy events beneath it. Below those sit four decomposition charts - by legal authority, China versus all others, by trading partner, and by economic sector - which open after a free sign-up.`,
       },
       {
         label: "How to read results.",
@@ -478,6 +486,36 @@ const SECTIONS: Section[] = [
       {
         label: "Current limits.",
         body: `Cite buttons appear only on figures we consider individually quotable; not every number on every page has one.`,
+      },
+    ],
+  },
+  /* Added 2026-10-27. Until then this file described every tool without once
+     mentioning that two of them gate part of their output, which meant the
+     Tariff Trends entry told readers to "read the six panels" when four of
+     them ask for an email first. If the gated set changes, change this. */
+  {
+    id: "free-sign-up",
+    title: "The free sign-up",
+    parts: [
+      {
+        label: "What it does.",
+        body: `Two parts of the site open after you give an email address: the per-authority breakdown on the Rate Calculator, and the four decomposition charts on Tariff Trends. Nothing else is gated. Every other tool, figure, chart and Cite button on the site is free and asks for nothing.`,
+      },
+      {
+        label: "Who it's for.",
+        body: `Anyone who wants those two things. An email address is the price of the work, in place of advertising or a subscription - this site carries neither.`,
+      },
+      {
+        label: "How to use it.",
+        body: `Click the unlock button on either gated panel. You give an email address and answer three short questions, then confirm through a link we email you. One sign-up covers both gated areas. The confirmation link is what completes it, so if nothing opens, check for that email.`,
+      },
+      {
+        label: "How to read results.",
+        body: `Once confirmed, the gated panels simply appear in place of the sign-up prompt. A cookie remembers the browser for a year, so a different browser or device will ask again.`,
+      },
+      {
+        label: "Current limits.",
+        body: `What happens to your address is set out in the privacy policy, and the short version is that we do not sell, rent, or give it to anyone. You can ask to have your record deleted at any time without losing anything you have read. If an address never confirms, the record is deleted after 90 days.`,
       },
     ],
   },

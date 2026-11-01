@@ -14,13 +14,16 @@
 // hand-maintained, date-stamped metadata. Re-verify on the schedule and update
 // STATUS_AS_OF + the affected entries when the law moves.
 //
-// LEGAL STATUS AS OF October 2026 (verified 2026-10-04):
+// LEGAL STATUS AS OF November 2026 (verified 2026-11-01):
 //   • 2026-02-20 — SCOTUS held (6-3) that IEEPA does not authorize tariffs,
 //     striking down BOTH the "reciprocal" trade-deficit tariffs AND the
 //     fentanyl/trafficking tariffs on China, Mexico, and Canada. The Court of
 //     International Trade has since ordered CBP to refund the collected duties
 //     (~$165B) and CBP is standing up a refund system ("CAPE"); that affects
-//     refund mechanics, not the invalidated legal status.
+//     refund mechanics, not the invalidated legal status. On 2026-10-08 the CIT
+//     also certified a class of importers who paid IEEPA duties between
+//     2025-02-01 and 2026-02-19 (Freestyle World v. CBP); no class-wide refund
+//     order has been entered yet.
 //   • Section 122 (balance-of-payments) — EXPIRED. It replaced the IEEPA
 //     tariffs (raised to 15%, the statutory max, effective 2026-02-24) and then
 //     lapsed BY OPERATION OF LAW at 12:01 a.m. EDT on 2026-07-24 when its
@@ -72,7 +75,7 @@
 //     decodeChapter99 gains sub-heading precision (same limitation as
 //     SECTION_232_COPPER).
 
-export const STATUS_AS_OF = "October 2026";
+export const STATUS_AS_OF = "November 2026";
 
 export type TariffActionStatus = "active" | "invalidated" | "expired" | "pending";
 
@@ -336,7 +339,7 @@ const SECTION_301_FORCED_LABOR: TariffAction = {
   status: "active",
   description:
     "Across-the-board Section 301 duties of 10% or 12.5% on imports from ~60 economies found to inadequately prohibit or enforce against goods produced with forced labor. Took effect July 24, 2026 as the broad baseline that replaced the expired Section 122 surcharge.",
-  note: "Additional duties of 10% or 12.5% on imports from roughly 60 economies (covering about 99.4% of U.S. imports) for failing to adopt or effectively enforce a forced-labor import ban. Effective 12:01 a.m. EDT July 24, 2026 — the same minute the Section 122 surcharge expired — as the replacement across-the-board baseline. Separate legal authority from the IEEPA tariffs and unaffected by the 2026 IEEPA ruling. Goods already subject to Section 232 duties are exempt from this surcharge, as are goods entering free of duty under the USMCA and CAFTA-DR textile and apparel goods. Its legality is being challenged at the Court of International Trade (argued September 30, 2026); the duties remain in effect pending a ruling.",
+  note: "Additional duties of 10% or 12.5% on imports from roughly 60 economies (covering about 99.4% of U.S. imports) for failing to adopt or effectively enforce a forced-labor import ban. Effective 12:01 a.m. EDT July 24, 2026 — the same minute the Section 122 surcharge expired — as the replacement across-the-board baseline. Separate legal authority from the IEEPA tariffs and unaffected by the 2026 IEEPA ruling. Goods already subject to Section 232 duties are exempt from this surcharge, as are goods entering free of duty under the USMCA and CAFTA-DR textile and apparel goods. Its legality is being challenged at the Court of International Trade (argued September 30, 2026); supplemental briefing closed October 16, 2026 and a ruling is pending; the duties remain in effect pending a ruling.",
   sourceUrl:
     "https://ustr.gov/about/policy-offices/press-office/press-releases/2026/july/ustr-takes-action-forced-labor-section-301-investigations",
   chapter99Lists: ["05"],
@@ -418,8 +421,8 @@ const SECTION_338_CANADA: TariffAction = {
   scope: "Country-specific — covered Canadian goods (duties + import bans)",
   status: "active",
   description:
-    "Additional 50% duties on covered Canadian goods (originally motor vehicles, dairy, and alcoholic beverages; scope widened September 15, 2026) plus outright import bans on certain Canadian alcohol, dairy-list goods, and large motorcycles from September 29, 2026, under the long-dormant Section 338 authority.",
-  note: "Additional 50% tariff on covered Canadian goods (HTS 9903.03.12–.14) under Section 338 of the Tariff Act of 1930 — the first use of this authority. In effect since August 22, 2026 (after a three-day suspension from the original August 19 date). Five September 8, 2026 proclamations escalated it: effective September 15, the covered-product lists were modified (adding items such as cheeses, steel and aluminum structural products, furniture, and lamps, and removing others), and the 50% now stacks on top of Section 232 duties for the alcohol and motor-vehicle lists, reversing the original no-stacking rule. Effective September 29, certain packaged Canadian alcoholic beverages, dairy-list goods (whey, molasses, non-alcoholic beer), and motorcycles over 800cc are banned from importation outright. Applies regardless of USMCA origin.",
+    "Additional 50% duties on covered Canadian goods (originally motor vehicles, dairy, and alcoholic beverages; scope widened September 15, 2026 and revised again October 30, 2026) plus outright import bans on certain Canadian alcohol, dairy-list goods, and large motorcycles from September 29, 2026, under the long-dormant Section 338 authority.",
+  note: "Additional 50% tariff on covered Canadian goods (HTS 9903.03.12–.14) under Section 338 of the Tariff Act of 1930 — the first use of this authority. In effect since August 22, 2026 (after a three-day suspension from the original August 19 date). Five September 8, 2026 proclamations escalated it: effective September 15, the covered-product lists were modified (adding items such as cheeses, steel and aluminum structural products, furniture, and lamps, and removing others), and the 50% now stacks on top of Section 232 duties for the alcohol and motor-vehicle lists, reversing the original no-stacking rule. Effective September 29, certain packaged Canadian alcoholic beverages, dairy-list goods (whey, molasses, non-alcoholic beer), and motorcycles over 800cc are banned from importation outright. Effective October 30, 2026 (proclamation signed October 23), the covered-product list under HTS 9903.03.14 was revised again — 22 lines removed (e.g., certain plywood, corrugated cartons, some machinery) and 100 added (e.g., paints, carpets, air conditioners, power tools, valves); the 50% rate is unchanged. Applies regardless of USMCA origin. Challenged in court (Gellert v. Trump, filed around October 20, 2026); no ruling yet, so the duties remain in effect.",
   sourceUrl:
     "https://www.whitehouse.gov/fact-sheets/2026/09/fact-sheet-president-donald-j-trump-responds-to-canadas-retaliation/",
   // HTS 9903.03.12–.14 shares the 2-digit "03" decode slot with the expired

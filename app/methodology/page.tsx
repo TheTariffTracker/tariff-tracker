@@ -1024,8 +1024,14 @@ export default function MethodologyPage() {
         <p>
           Methodology questions, corrections, or requests for additional
           documentation:{" "}
-          <a href="mailto:privacy@tarifftracker.org" className={linkClass}>
-            privacy@tarifftracker.org
+          {/* contact@, not privacy@. This read privacy@ until 2026-11-07, the
+              only page on the site that did -- every other page, /privacy
+              included, uses contact@. Methodology questions are not privacy
+              requests, so it was the wrong address even though it worked:
+              privacy@ is an active Cloudflare route to the same inbox, so no
+              mail was lost. It stays live as an unadvertised alias. */}
+          <a href="mailto:contact@tarifftracker.org" className={linkClass}>
+            contact@tarifftracker.org
           </a>
         </p>
       </div>

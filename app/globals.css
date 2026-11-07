@@ -106,6 +106,38 @@ body {
   overflow-x: hidden;
 }
 
+/* Let wide tables scroll inside their card on narrow screens.
+   This is the other half of the overflow-x:hidden rule above, and it was
+   missing for three weeks. 17 of the site's 18 tables have no scroll
+   container of their own (the exception is the data-source table on
+   /methodology). They are sized by their columns, not by their card, so on a
+   phone they are simply wider than the screen: /incoming-tariffs measured 365
+   px of table inside a 327px card inside a 375px viewport, its Title column
+   running from x=199 to x=390.
+
+   Before the clip above existed, that overflow made the whole PAGE pannable
+   -- bad, but you could drag sideways and read the rest. Clipping the root
+   removed that escape hatch and turned it into text nobody could reach. The
+   clip is still right; what was missing is somewhere for the overflow to go.
+
+   display:block is what makes a table scrollable at all -- a table box
+   ignores overflow. width:max-content keeps the columns at their natural
+   widths instead of letting them crush, and max-width:100% keeps the
+   scrolling box inside the card. Scoped to the same 700px breakpoint as the
+   nav and the tooltips, so desktop table layout is untouched.
+
+   If a table ever needs to fill its card on mobile rather than scroll, give
+   that one a wrapper div with overflow-x-auto and exclude it here, rather
+   than weakening this rule for all of them. */
+@media (max-width: 700px) {
+  main table {
+    display: block;
+    width: max-content;
+    max-width: 100%;
+    overflow-x: auto;
+  }
+}
+
 /* ==========================================================================
    Masthead — cream brand header at the top of every page. Stays cream in
    both light and dark themes (the body content below is what flips). The

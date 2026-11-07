@@ -1,3 +1,16 @@
+-- =====================================================================
+-- SUPERSEDED 2026-11-07 -- DO NOT RUN THIS FILE.
+--
+-- scripts/fr_views.sql is now the single source of truth for the whole
+-- Federal Register view stack (index + tariff_fr_alerts + adcvd_fr_alerts).
+--
+-- This file is kept for its history and its evidence only. Running it will
+-- REINTRODUCE the BIS bug: its agency list contains the slug
+-- 'bureau-of-industry-and-security', which matches zero rows. The Federal
+-- Register's real slug is 'industry-and-security-bureau'. That mistake hid
+-- 72 documents from every Federal Register page on the site.
+-- =====================================================================
+
 -- fr_alerts_agency_index.sql
 --
 -- Fixes a sequential scan on federal_register_alerts that was causing

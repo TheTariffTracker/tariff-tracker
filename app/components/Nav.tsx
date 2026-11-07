@@ -120,16 +120,26 @@ export default function Nav() {
           </span>
         </button>
         {open && (
-          /* Anchoring: right-0 aligns the panel's right edge with the button,
-             which is correct on desktop where the button sits at the far
-             right. Below 700px the button is at the far LEFT instead (the
-             link scroller is hidden), so right-0 put the panel's left edge at
-             x=-34 and clipped the start of every label. max-[700px]:left-0
-             flips it to open rightward from the button, where there is 336px
-             of room for the full names. */
+          /* DESKTOP: a dropdown hanging off the button. right-0 aligns the
+             panel's right edge with the button, which is correct there
+             because the button sits at the far right of the strip.
+
+             BELOW 700px: a bottom sheet pinned to the viewport instead.
+             Measured on /calculator at 375x812 before this change: the nav
+             sits 568px down the page under the masthead, so an absolutely
+             positioned menu opened at y=614, ran 516px tall, and put its
+             bottom at 1130 against an 812px viewport -- only 4 of its 13
+             items were on screen and 318px hung below the fold. Capping the
+             height would not have helped, because the problem is where the
+             menu STARTS, not how tall it is. Anchoring to the viewport is the
+             only thing that fixes it, and it matches what the info tooltips
+             already do at this width for the same reason.
+
+             right-auto/left-auto are needed to cancel the desktop right-0,
+             and top-auto to cancel top-full, or they fight the inset. */
           <div
             role="menu"
-            className="absolute right-0 top-full min-w-[180px] max-[700px]:right-auto max-[700px]:left-0 max-[700px]:min-w-[210px] bg-bg border border-border rounded-b shadow-lg z-50 overflow-hidden"
+            className="absolute right-0 top-full min-w-[180px] bg-bg border border-border rounded-b shadow-lg z-50 overflow-hidden max-[700px]:fixed max-[700px]:right-auto max-[700px]:left-0 max-[700px]:top-auto max-[700px]:bottom-0 max-[700px]:w-full max-[700px]:min-w-0 max-[700px]:max-h-[70vh] max-[700px]:overflow-y-auto max-[700px]:rounded-none max-[700px]:border-x-0 max-[700px]:border-b-0 max-[700px]:shadow-[0_-8px_24px_rgba(0,0,0,0.18)]"
           >
             {/* Below 700px this menu carries the whole site: the nine links
                 from the hidden scroller first, then the four that live here

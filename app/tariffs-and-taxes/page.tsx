@@ -325,7 +325,7 @@ export default async function TariffsAndTaxesPage() {
           <h2 className="text-sm font-semibold m-0">
             Federal Revenue Composition — FY 2025
           </h2>
-          <span className="text-[11px] text-fg-muted whitespace-nowrap">
+          <span className="text-[11px] text-fg-muted whitespace-nowrap max-[700px]:whitespace-normal">
             Total: {formatLargeDollars(fy2025.total)}
           </span>
         </header>
@@ -376,7 +376,7 @@ export default async function TariffsAndTaxesPage() {
           <h2 className="text-sm font-semibold m-0">
             Customs Duties as a Share of Fiscal-Year-to-Date Federal Receipts
           </h2>
-          <span className="text-[11px] text-fg-muted whitespace-nowrap">
+          <span className="text-[11px] text-fg-muted whitespace-nowrap max-[700px]:whitespace-normal">
             Cumulative within FY · resets each Oct 1
           </span>
         </header>

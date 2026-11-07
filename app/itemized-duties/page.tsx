@@ -280,7 +280,7 @@ async function ListView({ q, chapter, page }: { q: string; chapter: string; page
       <section className="border border-border bg-bg">
         <header className="flex justify-between items-center px-4 py-3 border-b border-border gap-4 flex-wrap">
           <h2 className="text-sm font-semibold m-0">HTS Codes by Cumulative Duties</h2>
-          <span className="text-[11px] text-fg-muted whitespace-nowrap">
+          <span className="text-[11px] text-fg-muted whitespace-nowrap max-[700px]:whitespace-normal">
             {error
               ? ""
               : `${total.toLocaleString("en-US")} ${isFiltered ? "matching" : "total"} codes with duties`}

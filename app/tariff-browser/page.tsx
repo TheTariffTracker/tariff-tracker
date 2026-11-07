@@ -123,7 +123,7 @@ export default async function TariffBrowserPage({
           <h2 className="text-sm font-semibold m-0">
             Harmonized Tariff Schedule
           </h2>
-          <span className="text-[11px] text-fg-muted whitespace-nowrap">
+          <span className="text-[11px] text-fg-muted whitespace-nowrap max-[700px]:whitespace-normal">
             {error
               ? ""
               : `${total.toLocaleString("en-US")} ${isFiltered ? "matching" : "total"} codes`}

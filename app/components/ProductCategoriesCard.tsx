@@ -184,7 +184,7 @@ export default async function ProductCategoriesCard() {
             ariaLabel="Source info"
           />
         </h2>
-        <span className="text-[11px] text-fg-muted whitespace-nowrap">
+        <span className="text-[11px] text-fg-muted whitespace-nowrap max-[700px]:whitespace-normal">
           {monthLabel}
         </span>
       </header>

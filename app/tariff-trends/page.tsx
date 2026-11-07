@@ -321,7 +321,7 @@ function ChartCardShell({
           {legend}
         </div>
         {meta && (
-          <span className="text-[11px] text-fg-muted whitespace-nowrap">{meta}</span>
+          <span className="text-[11px] text-fg-muted whitespace-nowrap max-[700px]:whitespace-normal">{meta}</span>
         )}
       </header>
       <div className="px-4 pb-4 pt-2">{children}</div>
@@ -643,7 +643,7 @@ function PolicyEventsPanel({ data }: { data: PolicyRow[] }) {
         <h2 className="text-sm font-semibold m-0">
           Tariff Policy Events
         </h2>
-        <span className="text-[11px] text-fg-muted whitespace-nowrap">
+        <span className="text-[11px] text-fg-muted whitespace-nowrap max-[700px]:whitespace-normal">
           {data.length} events · ordered by effective date
         </span>
       </header>
@@ -679,7 +679,7 @@ function PolicyEventsPanel({ data }: { data: PolicyRow[] }) {
                     {formatLongDate(row.effective_date)}
                   </td>
                   <td className={cellBase}>{row.policy_event ?? ""}</td>
-                  <td className={`${cellBase} font-mono text-[11px] text-fg-muted whitespace-nowrap`}>
+                  <td className={`${cellBase} font-mono text-[11px] text-fg-muted whitespace-nowrap max-[700px]:whitespace-normal`}>
                     {row.revision}
                   </td>
                   <td className={`${cellBase} text-center`}>

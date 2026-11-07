@@ -207,7 +207,7 @@ export default async function CountryProfile({
       <section className={SECTION_CLASS}>
         <header className={SECTION_HEAD}>
           <h2 className={SECTION_TITLE}>Cumulative Customs Duties</h2>
-          <span className="text-[11px] text-fg-muted whitespace-nowrap">
+          <span className="text-[11px] text-fg-muted whitespace-nowrap max-[700px]:whitespace-normal">
             Source: U.S. Census Bureau · Since January 2025
           </span>
         </header>
@@ -253,7 +253,7 @@ export default async function CountryProfile({
       <section className={SECTION_CLASS}>
         <header className={SECTION_HEAD}>
           <h2 className={SECTION_TITLE}>Top Product Categories by Duties</h2>
-          <span className="text-[11px] text-fg-muted whitespace-nowrap">
+          <span className="text-[11px] text-fg-muted whitespace-nowrap max-[700px]:whitespace-normal">
             HTS chapters · cumulative since January 2025
           </span>
         </header>
@@ -300,7 +300,7 @@ export default async function CountryProfile({
       <section className={SECTION_CLASS}>
         <header className={SECTION_HEAD}>
           <h2 className={SECTION_TITLE}>Applicable Tariff Actions</h2>
-          <span className="text-[11px] text-fg-muted whitespace-nowrap">
+          <span className="text-[11px] text-fg-muted whitespace-nowrap max-[700px]:whitespace-normal">
             Status as of {STATUS_AS_OF}
           </span>
         </header>

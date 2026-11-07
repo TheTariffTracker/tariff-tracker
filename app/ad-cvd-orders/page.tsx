@@ -139,7 +139,7 @@ export default async function AdcvdOrdersPage({
           <h2 className="text-sm font-semibold m-0">
             AD/CVD Federal Register Actions
           </h2>
-          <span className="text-[11px] text-fg-muted whitespace-nowrap">
+          <span className="text-[11px] text-fg-muted whitespace-nowrap max-[700px]:whitespace-normal">
             {error
               ? ""
               : `${totalForFilter.toLocaleString("en-US")} matching actions`}

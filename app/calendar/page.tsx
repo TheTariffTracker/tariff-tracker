@@ -167,7 +167,7 @@ export default async function CalendarPage() {
           <section className={SECTION_CLASS}>
             <header className={SECTION_HEAD}>
               <h2 className={SECTION_TITLE}>Upcoming Effective Dates</h2>
-              <span className="text-[11px] text-fg-muted whitespace-nowrap">
+              <span className="text-[11px] text-fg-muted whitespace-nowrap max-[700px]:whitespace-normal">
                 Source: Federal Register
               </span>
             </header>
@@ -188,7 +188,7 @@ export default async function CalendarPage() {
           <section className={SECTION_CLASS}>
             <header className={SECTION_HEAD}>
               <h2 className={SECTION_TITLE}>Recently Effective</h2>
-              <span className="text-[11px] text-fg-muted whitespace-nowrap">
+              <span className="text-[11px] text-fg-muted whitespace-nowrap max-[700px]:whitespace-normal">
                 Past {PAST_WINDOW_DAYS} days
               </span>
             </header>

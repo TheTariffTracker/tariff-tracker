@@ -52,7 +52,7 @@ export default async function FrAlertsCard() {
         <h2 className="text-sm font-semibold m-0">
           Recent Federal Register Tariff Alerts
         </h2>
-        <span className="text-[11px] text-fg-muted whitespace-nowrap">
+        <span className="text-[11px] text-fg-muted whitespace-nowrap max-[700px]:whitespace-normal">
           Latest 5
         </span>
       </header>

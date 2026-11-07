@@ -189,7 +189,7 @@ export default async function ChapterProfile({
       <section className={SECTION_CLASS}>
         <header className={SECTION_HEAD}>
           <h2 className={SECTION_TITLE}>Cumulative Customs Duties</h2>
-          <span className="text-[11px] text-fg-muted whitespace-nowrap">
+          <span className="text-[11px] text-fg-muted whitespace-nowrap max-[700px]:whitespace-normal">
             Source: U.S. Census Bureau · Since January 2025
           </span>
         </header>
@@ -220,7 +220,7 @@ export default async function ChapterProfile({
       <section className={SECTION_CLASS}>
         <header className={SECTION_HEAD}>
           <h2 className={SECTION_TITLE}>Top HTS Codes by Duties</h2>
-          <span className="text-[11px] text-fg-muted whitespace-nowrap">
+          <span className="text-[11px] text-fg-muted whitespace-nowrap max-[700px]:whitespace-normal">
             Cumulative since January 2025
           </span>
         </header>
@@ -260,7 +260,7 @@ export default async function ChapterProfile({
       <section className={SECTION_CLASS}>
         <header className={SECTION_HEAD}>
           <h2 className={SECTION_TITLE}>Top Source Countries by Duties</h2>
-          <span className="text-[11px] text-fg-muted whitespace-nowrap">
+          <span className="text-[11px] text-fg-muted whitespace-nowrap max-[700px]:whitespace-normal">
             Cumulative since January 2025
           </span>
         </header>

@@ -230,7 +230,7 @@ export default async function ChartCard() {
           <h2 className="text-sm font-semibold m-0">
             Daily Customs Receipts — Last 90 Days
           </h2>
-          <span className="text-[11px] text-fg-muted whitespace-nowrap">
+          <span className="text-[11px] text-fg-muted whitespace-nowrap max-[700px]:whitespace-normal">
             Source: Daily Treasury Statement
           </span>
         </header>
@@ -306,7 +306,7 @@ export default async function ChartCard() {
           </div>
         </div>
         <div className="flex flex-col items-end gap-0.5">
-          <span className="text-[11px] text-fg-muted whitespace-nowrap">
+          <span className="text-[11px] text-fg-muted whitespace-nowrap max-[700px]:whitespace-normal">
             Source: Daily Treasury Statement · Data through {formatLongDate(anchorDate)}
           </span>
           <CiteButton

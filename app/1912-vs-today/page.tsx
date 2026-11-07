@@ -89,7 +89,7 @@ function Panel({
     <section className="border border-border bg-bg mb-5">
       <header className="flex justify-between items-start px-4 py-3 border-b border-border gap-4 flex-wrap">
         <h2 className="text-sm font-semibold m-0">{title}</h2>
-        {meta && <span className="text-[11px] text-fg-muted whitespace-nowrap">{meta}</span>}
+        {meta && <span className="text-[11px] text-fg-muted whitespace-nowrap max-[700px]:whitespace-normal">{meta}</span>}
       </header>
       <div className="px-4 py-4">{children}</div>
     </section>

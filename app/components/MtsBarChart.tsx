@@ -126,7 +126,7 @@ export default async function MtsBarChart() {
           <h2 className="text-sm font-semibold m-0">
             Monthly Customs Duties — Since January 2025
           </h2>
-          <span className="text-[11px] text-fg-muted whitespace-nowrap">
+          <span className="text-[11px] text-fg-muted whitespace-nowrap max-[700px]:whitespace-normal">
             Source: Monthly Treasury Statement Table 4
           </span>
         </header>
@@ -191,7 +191,7 @@ export default async function MtsBarChart() {
             />
             Refunds exceeded collections
           </span>
-          <span className="text-[11px] text-fg-muted whitespace-nowrap">
+          <span className="text-[11px] text-fg-muted whitespace-nowrap max-[700px]:whitespace-normal">
             Source: Monthly Treasury Statement Table 4 · Through {newestLabel}
           </span>
         </div>

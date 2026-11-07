@@ -202,7 +202,7 @@ function TableCard({
       <header className="flex justify-between items-center px-4 py-3 border-b border-border gap-4 flex-wrap">
         <h2 className="text-sm font-semibold m-0">{title}</h2>
         {meta && (
-          <span className="text-[11px] text-fg-muted whitespace-nowrap">{meta}</span>
+          <span className="text-[11px] text-fg-muted whitespace-nowrap max-[700px]:whitespace-normal">{meta}</span>
         )}
       </header>
       {children}

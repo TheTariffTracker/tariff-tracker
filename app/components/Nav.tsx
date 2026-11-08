@@ -1,12 +1,14 @@
 // Top navigation strip. Theme-responsive (bg/border flip light↔dark; the 3px
 // orange top border stays). Active item gets a 2px orange underline.
 //
-// Phase 3.65 / Tool #6 nav restructure: 9 highest-value tools live on the
-// visible strip, ordered thematically (home → revenue → revenue composition →
-// forward-looking → lookups → utilities); 4 secondary/reference tools live
-// behind a "More Tools" dropdown. The new
-// page *types* (Country and HTS Chapter profiles) are intentionally NOT in the
-// nav — they're hundreds of pages reached via in-page links and search.
+// Phase 3.65 / Tool #6 nav restructure: the highest-value tools live on the
+// visible strip, ordered thematically (revenue → revenue composition →
+// forward-looking → trade remedies → lookups → utilities); secondary and
+// reference tools live behind a "More Tools" dropdown. As of 2026-11-08 that
+// is 9 items on the desktop strip and 3 in the dropdown; VISIBLE_ITEMS holds
+// 10 because Dashboard is desktopHidden (see the note on that array). The
+// page *types* (Country and HTS Chapter profiles) are intentionally NOT in
+// the nav — they're hundreds of pages reached via in-page links and search.
 //
 // Client component: usePathname() for active-state highlighting + React state
 // for the dropdown (click-outside / ESC close), mirroring InfoMenu.tsx.
@@ -18,15 +20,53 @@ import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import SearchBar from "./SearchBar";
 
-type NavItem = { label: string; href: string };
+// desktopHidden: the item stays in VISIBLE_ITEMS so it keeps its place in the
+// mobile dropdown, but is hidden from the desktop strip. Used only for
+// Dashboard — see the note on VISIBLE_ITEMS below.
+type NavItem = { label: string; href: string; desktopHidden?: boolean };
 
+// Dashboard is desktopHidden rather than deleted. The masthead emblem is
+// already a link to "/" on every page (Masthead.tsx, aria-label "Tariff
+// Tracker home"), so a Dashboard entry in the desktop strip was a second home
+// link sitting a few hundred pixels from the first. Removing it frees the
+// slot AD/CVD Orders was promoted into. It is kept in this array because
+// below 700px the strip is hidden entirely and this list becomes the mobile
+// dropdown, where the logo is the ONLY other way home — dropping it outright
+// would leave the phone menu with no explicit home link.
+//
+// AD/CVD moved up from More Tools 2026-11-08. The argument was internal
+// rather than a response to any one request: CIT Decisions was in the strip
+// while the orders feed that court largely rules on sat hidden, so the site
+// showed the courtroom and hid the docket. It is placed immediately before
+// CIT Decisions to make that pairing visible.
+//
+// LABEL IS "AD/CVD", not "AD/CVD Orders" — the page keeps its full title and
+// subtitle, only the nav label is short. This strip has a hard width budget
+// and the long form broke it: 9 items came to 1152px, and with More Tools
+// (115) + search (186) + Support (90) the strip needs ~1545px to show
+// everything. Most laptops are 1280-1512 CSS px, so the last item clips. The
+// long label pushed it ~30px past where it had been just fitting and cut
+// "Rate Calculator" in half on Aaron's own screen. "AD/CVD" gives ~48px back,
+// leaving the strip narrower than before the promotion.
+//
+// Measured per-item widths, if a future item needs a budget: Revenue Tracker
+// 136 · Incoming Tariffs 132 · AD/CVD Orders 129 (long form) · Rate
+// Calculator 127 · Tariff Calendar 124 · Tariffs & Taxes 123 · Tariff Browser
+// 120 · 1912 vs Today 118 · CIT Decisions 118.
+//
+// DO NOT shorten "Tariff Calendar" or "Tariff Browser" to "Calendar" and
+// "Browser" to win space. It was proposed on 2026-11-08 and Aaron rejected it
+// outright: the prefix is load-bearing for clarity, whatever the word count
+// looks like on a site named Tariff Tracker. Take width from padding or from
+// demoting an item instead.
 const VISIBLE_ITEMS: NavItem[] = [
-  { label: "Dashboard", href: "/" },
+  { label: "Dashboard", href: "/", desktopHidden: true },
   { label: "Revenue Tracker", href: "/revenue-tracker" },
   { label: "Tariffs & Taxes", href: "/tariffs-and-taxes" },
   { label: "1912 vs Today", href: "/1912-vs-today" },
   { label: "Incoming Tariffs", href: "/incoming-tariffs" },
   { label: "Tariff Calendar", href: "/calendar" },
+  { label: "AD/CVD", href: "/ad-cvd-orders" },
   { label: "CIT Decisions", href: "/cit-decisions" },
   { label: "Tariff Browser", href: "/tariff-browser" },
   { label: "Rate Calculator", href: "/calculator" },
@@ -34,13 +74,20 @@ const VISIBLE_ITEMS: NavItem[] = [
 
 const MORE_TOOLS_ITEMS: NavItem[] = [
   { label: "Itemized Duties", href: "/itemized-duties" },
-  { label: "AD/CVD Orders", href: "/ad-cvd-orders" },
   { label: "Historical Archive", href: "/historical-archive" },
   { label: "Tariff Trends", href: "/tariff-trends" },
 ];
 
+// px-3 rather than px-4. Measured 2026-11-08: the strip needed 1154px and
+// only fits a viewport of ~1585+, so "Rate Calculator" was clipping on a
+// 1520px screen. Trimming 4px a side off ten items gives 80px back, and the
+// scroller's pl-3 below gives 12 more, bringing the need to ~1062 and the
+// fit down to roughly 1455. Items keep ~24px of visual separation.
+// This does NOT fix 1440, 1366 or 1280 — those still scroll the strip, which
+// is what it is designed to do. Fixing those needs a structural change
+// (fewer items, or collapsing search to an icon), not more trimming.
 const ITEM_BASE =
-  "px-4 py-[11px] text-[13px] font-medium whitespace-nowrap border-b-2 transition-colors";
+  "px-3 py-[11px] text-[13px] font-medium whitespace-nowrap border-b-2 transition-colors";
 const ACTIVE = `${ITEM_BASE} border-b-orange text-fg`;
 const INACTIVE = `${ITEM_BASE} border-b-transparent text-fg-muted hover:text-fg`;
 
@@ -86,12 +133,48 @@ export default function Nav() {
           search field also narrows in SearchBar.tsx: with this scroller gone
           the remaining three children measure 358px inside 375px, where a
           130px search field would have put them at 392px. */}
-      <div className="nav-items flex min-w-0 overflow-x-auto pl-6 max-[700px]:hidden">
+      <div className="nav-items flex min-w-0 overflow-x-auto pl-3 max-[700px]:hidden">
+        {/* Home. Replaces the "Dashboard" text item that used to open this
+            strip: ~40px against its ~100px, which is most of the width the
+            AD/CVD promotion needed. It is also what restores an active state
+            on "/" — with Dashboard gone and no icon, no nav item highlighted
+            on the home page at all.
+            Desktop only, because this scroller is hidden below 700px; the
+            mobile dropdown still renders "Dashboard" as text, so the phone
+            menu keeps a labelled home link rather than an unlabelled glyph.
+            aria-label and title are not optional here: there is no text for a
+            screen reader or a hover to fall back on. Shares ITEM_BASE so it
+            sits on the row baseline and takes the same orange underline as
+            every other item. */}
+        <Link
+          href="/"
+          aria-label="Home"
+          title="Home"
+          aria-current={pathname === "/" ? "page" : undefined}
+          className={`${pathname === "/" ? ACTIVE : INACTIVE} flex items-center`}
+        >
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+          >
+            <path d="M3 10.5 12 3l9 7.5" />
+            <path d="M5.5 9.5V20a1 1 0 0 0 1 1h11a1 1 0 0 0 1-1V9.5" />
+          </svg>
+        </Link>
         {VISIBLE_ITEMS.map((item) => (
           <Link
             key={item.label}
             href={item.href}
-            className={pathname === item.href ? ACTIVE : INACTIVE}
+            className={`${pathname === item.href ? ACTIVE : INACTIVE}${
+              item.desktopHidden ? " min-[701px]:hidden" : ""
+            }`}
           >
             {item.label}
           </Link>
@@ -112,7 +195,7 @@ export default function Nav() {
           onClick={() => setOpen((v) => !v)}
           aria-haspopup="menu"
           aria-expanded={open}
-          className={`${moreActive ? ACTIVE : INACTIVE} flex items-center gap-1 cursor-pointer max-[700px]:px-3`}
+          className={`${moreActive ? ACTIVE : INACTIVE} flex items-center gap-1 cursor-pointer`}
         >
           More Tools
           <span aria-hidden className="text-[10px]">
